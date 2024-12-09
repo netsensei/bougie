@@ -12,7 +12,8 @@ var (
 	// P the current tea program
 	P *tea.Program
 	// WindowSize store the size of the terminal window
-	WindowSize tea.WindowSizeMsg
+	WindowWidth  int
+	WindowHeight int
 )
 var InputStyle = lipgloss.NewStyle().Margin(0, 2)
 

@@ -15,6 +15,7 @@ type Status struct {
 	spinner spinner.Model
 	mode    status
 	url     string
+	Width   int
 }
 
 func NewStatus() Status {
@@ -57,7 +58,7 @@ func (m Status) View() string {
 	}
 
 	if m.mode == ready {
-		return fmt.Sprintf("ready.")
+		return "ready"
 	}
 
 	return ""

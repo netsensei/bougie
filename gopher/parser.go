@@ -9,17 +9,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type Item interface {
-	Parse(raw []byte)
-	Render() string
-}
-
 type Text struct {
 	Content string
 }
 
-func (t *Text) Parse(raw []byte) {
-	t.Content = string(raw)
+func NewText(raw []byte) *Text {
+	return &Text{
+		Content: string(raw),
+	}
 }
 
 func (t *Text) Render() string {
@@ -27,58 +24,78 @@ func (t *Text) Render() string {
 }
 
 type Menu struct {
-	Lines  []*Line
-	Active int
+	Lines   []*Line
+	Links   []*Link
+	Active  int
+	Content string
 }
 
-type Link struct {
-	URL      url.URL
-	Position int
-}
-
-func NewMenu() *Menu {
-	return &Menu{
+func NewMenu(raw []byte) *Menu {
+	m := &Menu{
 		Active: 0,
 	}
-}
 
-func (m *Menu) Links() []Link {
-	res := make([]Link, 0)
-	for k, l := range m.Lines {
+	reader := bytes.NewReader(raw)
+	scanner := bufio.NewScanner(reader)
+
+	pos := 0
+
+	for scanner.Scan() {
+		l := &Line{}
+		st := scanner.Text()
+
+		if len(st) < 1 {
+			continue
+		}
+
+		lp := strings.Split(st[1:], "\t")
+		if len(lp) < 4 {
+			continue
+		}
+
+		l.Type = st[:1]
+
 		switch l.Type {
+		case "i":
+			l.Text = lp[0]
 		case "0", "1", "3", "7":
-			url := url.URL{
-				Scheme: "gopher",
-				Host:   l.Host,
-				Path:   l.Path,
+			path := l.Type
+			if path != "" {
+				path = path + lp[1]
 			}
 
-			res = append(res, Link{
-				URL:      url,
-				Position: k,
+			host := lp[2]
+			if lp[3] != "" {
+				host = lp[2] + ":" + lp[3]
+			}
+
+			l.Path = path
+			l.Host = host
+			l.Text = lp[0]
+
+			url := url.URL{
+				Scheme: "gopher",
+				Host:   host,
+				Path:   path,
+			}
+
+			m.Links = append(m.Links, &Link{
+				URL:      url.String(),
+				Position: pos,
 			})
+
+			pos++
 		}
+
+		m.Lines = append(m.Lines, l)
+
 	}
 
-	return res
+	return m
 }
 
-func (m *Menu) ActiveLink() *Link {
-	l := m.Links()
-	return &l[m.Active]
-}
-
-type Line struct {
-	Type string
-	Text string
-	Path string
-	Host string
-	Port string
-}
-
-// Should be part of Menu??
-func Parse(raw []byte) Menu {
-	p := Menu{
+func ParseMenu(raw []byte) *Menu {
+	p := &Menu{
 		Active: 0,
 	}
 
@@ -180,4 +197,17 @@ func (m *Menu) Render() string {
 	}
 
 	return res
+}
+
+type Line struct {
+	Type string
+	Text string
+	Path string
+	Host string
+	Port string
+}
+
+type Link struct {
+	URL      string
+	Position int
 }

@@ -3,7 +3,6 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/netsensei/bougie/tui/constants"
@@ -31,12 +30,14 @@ const (
 	loading
 )
 
-type Model struct {
-	input    textinput.Model
-	status   Status
-	viewport viewport.Model
+type Browser struct {
+	input  textinput.Model
+	status Status
+	// viewport viewport.Model
+	canvas   Canvas
 	mode     mode
 	quitting bool
+	ready    bool
 }
 
 func initBrowser() (tea.Model, tea.Cmd) {
@@ -48,7 +49,7 @@ func initBrowser() (tea.Model, tea.Cmd) {
 
 	status := NewStatus()
 
-	m := Model{
+	m := Browser{
 		mode:   view,
 		input:  input,
 		status: status,
@@ -57,7 +58,7 @@ func initBrowser() (tea.Model, tea.Cmd) {
 	return m, func() tea.Msg { return nil }
 }
 
-func (m Model) Init() tea.Cmd {
+func (m Browser) Init() tea.Cmd {
 	var cmds []tea.Cmd
 
 	cmds = append(cmds, m.status.Init())
@@ -66,15 +67,22 @@ func (m Model) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		height := msg.Height - lipgloss.Height(m.input.View()) - lipgloss.Height(m.status.View()) - 2
-		m.viewport = viewport.New(msg.Width, height)
+		constants.WindowHeight = msg.Height - lipgloss.Height(m.input.View()) - lipgloss.Height(m.status.View()) - 2
+		constants.WindowWidth = msg.Width
+
+		m.canvas = NewCanvas()
 		m.input.Width = msg.Width
+		m.status.Width = msg.Width
+
+	case LoadingMsg:
+		cmds = append(cmds, GetContent)
+
 	case tea.KeyMsg:
 		if key.Matches(msg, constants.Keymap.Quit) {
 			m.quitting = true
@@ -86,34 +94,27 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.mode = view
 				m.input.Blur()
 			}
-			m.input, cmd = m.input.Update(msg)
 		} else {
 			if key.Matches(msg, constants.Keymap.Nav) {
 				m.mode = nav
 				m.input.Focus()
 			}
-			m.viewport, cmd = m.viewport.Update(msg)
 		}
 		cmds = append(cmds, cmd)
-
-	case LoadingMsg:
-		m.status, cmd = m.status.Update(msg)
-		cmds = append(cmds, cmd)
-		cmds = append(cmds, GetContent)
-	case ReadyMsg:
-		m.status, cmd = m.status.Update(msg)
-		m.viewport.SetContent(string(msg))
-		cmds = append(cmds, cmd)
-	default:
-		m.status, cmd = m.status.Update(msg)
-		cmds = append(cmds, cmd)
 	}
+
+	m.status, cmd = m.status.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.canvas, cmd = m.canvas.Update(msg)
+	cmds = append(cmds, cmd)
+
 	return m, tea.Batch(cmds...)
 }
 
-func (m Model) View() string {
+func (m Browser) View() string {
 	if m.quitting {
 		return "Bye!\n"
 	}
-	return constants.InputStyle.Render(m.input.View() + "\n" + m.viewport.View() + "\n" + m.status.View())
+	return constants.InputStyle.Render(m.input.View() + "\n" + m.canvas.View() + "\n" + m.status.View())
 }
