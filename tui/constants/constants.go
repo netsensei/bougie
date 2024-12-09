@@ -19,7 +19,7 @@ var InputStyle = lipgloss.NewStyle().Margin(0, 2)
 
 type keymap struct {
 	Quit  key.Binding
-	Back  key.Binding
+	View  key.Binding
 	Nav   key.Binding
 	Enter key.Binding
 }
@@ -30,7 +30,7 @@ var Keymap = keymap{
 		key.WithKeys("ctrl+c", "ctrl+q"),
 		key.WithHelp("ctrl+c/ctrl+q", "quit"),
 	),
-	Back: key.NewBinding(
+	View: key.NewBinding(
 		key.WithKeys("esc"),
 		key.WithHelp("esc", "back"),
 	),

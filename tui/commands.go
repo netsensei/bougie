@@ -7,22 +7,41 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type LoadingMsg struct {
+type QueryMsg struct {
 	url string
 }
 
 type ReadyMsg string
 
-func load(url string) tea.Cmd {
+type ModeMsg mode
+
+func setBrowserMode(mode mode) tea.Cmd {
 	return func() tea.Msg {
-		return LoadingMsg{
+		return mode
+	}
+}
+
+func queryCmd(url string) tea.Cmd {
+	// Parse the Url
+	return func() tea.Msg {
+		return QueryMsg{
 			url: url,
 		}
 	}
 }
 
-func GetContent() tea.Msg {
-	content, _ := os.ReadFile("bacon.txt")
-	time.Sleep(3 * time.Second)
-	return ReadyMsg(content)
+// func doRequestCmd() tea.Cmd {
+// 	// Return a request
+// }
+
+// func parseResponse() tea.Cmd {
+// 	// Return a parsed response
+// }
+
+func GetContent(foo string) tea.Cmd {
+	return func() tea.Msg {
+		content, _ := os.ReadFile("bacon.txt")
+		time.Sleep(3 * time.Second)
+		return ReadyMsg(content)
+	}
 }

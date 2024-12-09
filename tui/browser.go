@@ -37,7 +37,7 @@ type Browser struct {
 	canvas   Canvas
 	mode     mode
 	quitting bool
-	ready    bool
+	// ready    bool
 }
 
 func initBrowser() (tea.Model, tea.Cmd) {
@@ -62,7 +62,7 @@ func (m Browser) Init() tea.Cmd {
 	var cmds []tea.Cmd
 
 	cmds = append(cmds, m.status.Init())
-	cmds = append(cmds, load("floodgap.com"))
+	cmds = append(cmds, queryCmd("floodgap.com"))
 
 	return tea.Batch(cmds...)
 }
@@ -80,8 +80,8 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.input.Width = msg.Width
 		m.status.Width = msg.Width
 
-	case LoadingMsg:
-		cmds = append(cmds, GetContent)
+	case QueryMsg:
+		cmds = append(cmds, GetContent("foo"))
 
 	case tea.KeyMsg:
 		if key.Matches(msg, constants.Keymap.Quit) {
@@ -90,7 +90,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if m.mode == nav {
-			if key.Matches(msg, constants.Keymap.Back) {
+			if key.Matches(msg, constants.Keymap.View) {
 				m.mode = view
 				m.input.Blur()
 			}
@@ -100,8 +100,11 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.input.Focus()
 			}
 		}
-		cmds = append(cmds, cmd)
+		cmds = append(cmds, setBrowserMode(m.mode))
 	}
+
+	m.input, cmd = m.input.Update(msg)
+	cmds = append(cmds, cmd)
 
 	m.status, cmd = m.status.Update(msg)
 	cmds = append(cmds, cmd)

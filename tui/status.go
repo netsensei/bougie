@@ -13,7 +13,8 @@ import (
 
 type Status struct {
 	spinner spinner.Model
-	mode    status
+	status  status
+	mode    mode
 	url     string
 	Width   int
 }
@@ -24,7 +25,7 @@ func NewStatus() Status {
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
 	m := Status{
-		mode:    ready,
+		status:  ready,
 		spinner: s,
 		url:     "",
 	}
@@ -40,11 +41,13 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
-	case LoadingMsg:
-		m.mode = loading
+	case QueryMsg:
+		m.status = loading
 		m.url = msg.url
 	case ReadyMsg:
-		m.mode = ready
+		m.status = ready
+	case ModeMsg:
+		m.mode = mode(msg)
 	default:
 		m.spinner, cmd = m.spinner.Update(msg)
 	}
@@ -53,13 +56,23 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 }
 
 func (m Status) View() string {
-	if m.mode == loading {
-		return fmt.Sprintf("%s loading %s", m.spinner.View(), m.url)
+	var status string
+	var mode string
+
+	if m.status == loading {
+		status = fmt.Sprintf("%s loading %s", m.spinner.View(), m.url)
 	}
 
-	if m.mode == ready {
-		return "ready"
+	if m.status == ready {
+		status = "ready"
 	}
 
-	return ""
+	if m.mode == nav {
+		mode = "INPUT"
+	}
+	if m.mode == view {
+		mode = "READING"
+	}
+
+	return fmt.Sprintf("%s | %s", status, mode)
 }
