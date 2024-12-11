@@ -15,12 +15,11 @@ var (
 	WindowWidth  int
 	WindowHeight int
 )
-var InputStyle = lipgloss.NewStyle().Margin(0, 2)
+var InputStyle = lipgloss.NewStyle()
 
 type keymap struct {
 	Quit  key.Binding
-	View  key.Binding
-	Nav   key.Binding
+	Mode  key.Binding
 	Enter key.Binding
 }
 
@@ -28,18 +27,18 @@ type keymap struct {
 var Keymap = keymap{
 	Quit: key.NewBinding(
 		key.WithKeys("ctrl+c", "ctrl+q"),
-		key.WithHelp("ctrl+c/ctrl+q", "quit"),
+		key.WithHelp("ctrl+c/ctrl+q", "Quit"),
 	),
-	View: key.NewBinding(
-		key.WithKeys("esc"),
-		key.WithHelp("esc", "back"),
-	),
-	Nav: key.NewBinding(
+	// View: key.NewBinding(
+	// 	key.WithKeys("esc"),
+	// 	key.WithHelp("esc", "back"),
+	// ),
+	Mode: key.NewBinding(
 		key.WithKeys("ctrl+n"),
-		key.WithHelp("ctrl+n", "Navigate"),
+		key.WithHelp("ctrl+n", "Toggle browser mode"),
 	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),
-		key.WithHelp("enter", "browse"),
+		key.WithHelp("enter", "Query"),
 	),
 }

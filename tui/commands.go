@@ -17,7 +17,7 @@ type ModeMsg mode
 
 func setBrowserMode(mode mode) tea.Cmd {
 	return func() tea.Msg {
-		return mode
+		return ModeMsg(mode)
 	}
 }
 
@@ -41,7 +41,7 @@ func queryCmd(url string) tea.Cmd {
 func GetContent(foo string) tea.Cmd {
 	return func() tea.Msg {
 		content, _ := os.ReadFile("bacon.txt")
-		time.Sleep(3 * time.Second)
+		time.Sleep(2 * time.Second)
 		return ReadyMsg(content)
 	}
 }

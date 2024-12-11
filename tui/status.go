@@ -26,6 +26,7 @@ func NewStatus() Status {
 
 	m := Status{
 		status:  ready,
+		mode:    nav,
 		spinner: s,
 		url:     "",
 	}
@@ -58,21 +59,54 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 func (m Status) View() string {
 	var status string
 	var mode string
+	//var action string
 
 	if m.status == loading {
-		status = fmt.Sprintf("%s loading %s", m.spinner.View(), m.url)
+		status = fmt.Sprintf("%s loading %s...", m.spinner.View(), m.url)
 	}
 
 	if m.status == ready {
-		status = "ready"
+		status = "Ready."
 	}
 
 	if m.mode == nav {
-		mode = "INPUT"
+		mode = "Input"
 	}
 	if m.mode == view {
-		mode = "READING"
+		mode = "View"
 	}
 
-	return fmt.Sprintf("%s | %s", status, mode)
+	var statusBarStyle = lipgloss.NewStyle().
+		Padding(1, 0).
+		Bold(true)
+	// Foreground(lipgloss.AdaptiveColor{Light: "#343433", Dark: "#C1C6B2"}).
+	// Background(lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#353533"})
+
+	var statusStyle = lipgloss.NewStyle().
+		Inherit(statusBarStyle)
+		// Foreground(lipgloss.Color("#FFFDF5")).
+		// Background(lipgloss.Color("#FF5F87")).
+		// Padding(0, 1)
+
+	var modeStyle = lipgloss.NewStyle().
+		Inherit(statusBarStyle).
+		Foreground(lipgloss.Color("#FFFDF5")).
+		Background(lipgloss.Color("#6124DF")).
+		Padding(0, 1).
+		Align(lipgloss.Right)
+
+	statusKey := statusStyle.Render(status)
+	modeKey := modeStyle.Render(mode)
+	midKey := lipgloss.NewStyle().
+		Inherit(statusBarStyle).
+		Width(m.Width - lipgloss.Width(statusKey) - lipgloss.Width(modeKey)).
+		Render(" ")
+
+	bar := lipgloss.JoinHorizontal(lipgloss.Top,
+		statusKey,
+		midKey,
+		modeKey,
+	)
+
+	return statusBarStyle.Width(m.Width).Render(bar)
 }

@@ -50,7 +50,7 @@ func initBrowser() (tea.Model, tea.Cmd) {
 	status := NewStatus()
 
 	m := Browser{
-		mode:   view,
+		mode:   nav,
 		input:  input,
 		status: status,
 	}
@@ -89,13 +89,11 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-		if m.mode == nav {
-			if key.Matches(msg, constants.Keymap.View) {
+		if key.Matches(msg, constants.Keymap.Mode) {
+			if m.mode == nav {
 				m.mode = view
 				m.input.Blur()
-			}
-		} else {
-			if key.Matches(msg, constants.Keymap.Nav) {
+			} else {
 				m.mode = nav
 				m.input.Focus()
 			}

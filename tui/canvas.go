@@ -10,10 +10,12 @@ type Canvas struct {
 	viewport viewport.Model
 	content  string
 	ready    bool
+	mode     mode
 }
 
 func NewCanvas() Canvas {
 	c := Canvas{
+		mode:    nav,
 		content: "Bougie, a tiny sparking Gopher browser",
 	}
 
@@ -36,14 +38,21 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		} else {
 			c.viewport.Width = constants.WindowWidth
 			c.viewport.Height = constants.WindowHeight
+			c.viewport, cmd = c.viewport.Update(msg)
 		}
 
 	case ReadyMsg:
 		c.content = string(msg)
 		c.viewport.SetContent(c.content)
-	}
 
-	c.viewport, cmd = c.viewport.Update(msg)
+	case ModeMsg:
+		c.mode = mode(msg)
+
+	case tea.KeyMsg:
+		if c.mode == view {
+			c.viewport, cmd = c.viewport.Update(msg)
+		}
+	}
 
 	return c, cmd
 }
