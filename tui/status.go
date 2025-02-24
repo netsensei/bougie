@@ -59,7 +59,6 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 func (m Status) View() string {
 	var status string
 	var mode string
-	//var action string
 
 	if m.status == loading {
 		status = fmt.Sprintf("%s loading %s...", m.spinner.View(), m.url)

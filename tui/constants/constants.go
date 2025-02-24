@@ -19,7 +19,8 @@ var InputStyle = lipgloss.NewStyle()
 
 type keymap struct {
 	Quit  key.Binding
-	Mode  key.Binding
+	Nav   key.Binding
+	View  key.Binding
 	Enter key.Binding
 }
 
@@ -33,9 +34,13 @@ var Keymap = keymap{
 	// 	key.WithKeys("esc"),
 	// 	key.WithHelp("esc", "back"),
 	// ),
-	Mode: key.NewBinding(
+	Nav: key.NewBinding(
 		key.WithKeys("ctrl+n"),
-		key.WithHelp("ctrl+n", "Toggle browser mode"),
+		key.WithHelp("ctrl+n", "Toggle nav mode"),
+	),
+	View: key.NewBinding(
+		key.WithKeys("ctrl+v"),
+		key.WithHelp("ctrl+v", "Toggle view mode"),
 	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),
