@@ -42,7 +42,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		}
 
 	case ReadyMsg:
-		c.viewport.SetContent(string(msg.response.Body))
+		c.viewport.SetContent(string(msg.content))
 
 	case ModeMsg:
 		c.mode = mode(msg)
