@@ -1,47 +1,46 @@
 package tui
 
 import (
-	"os"
-	"time"
+	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/netsensei/bougie/gopher"
 )
 
 type QueryMsg struct {
 	url string
 }
 
-type ReadyMsg string
+type ReadyMsg struct {
+	response *gopher.Response
+}
 
 type ModeMsg mode
 
-func setBrowserMode(mode mode) tea.Cmd {
+func setBrowserModeCmd(mode mode) tea.Cmd {
 	return func() tea.Msg {
 		return ModeMsg(mode)
 	}
 }
 
-func queryCmd(url string) tea.Cmd {
-	// Parse the Url
+func SendQueryCmd(url string) tea.Cmd {
 	return func() tea.Msg {
-		return QueryMsg{
-			url: url,
+		ctx := context.TODO()
+		request := gopher.New(url)
+		response, _ := request.Do(ctx)
+
+		// Parse the response
+
+		return ReadyMsg{
+			response: response,
 		}
 	}
 }
 
-// func doRequestCmd() tea.Cmd {
-// 	// Return a request
+// func GetContent(foo string) tea.Cmd {
+// 	return func() tea.Msg {
+// 		content, _ := os.ReadFile("bacon.txt")
+// 		time.Sleep(2 * time.Second)
+// 		return ReadyMsg(content)
+// 	}
 // }
-
-// func parseResponse() tea.Cmd {
-// 	// Return a parsed response
-// }
-
-func GetContent(foo string) tea.Cmd {
-	return func() tea.Msg {
-		content, _ := os.ReadFile("bacon.txt")
-		time.Sleep(2 * time.Second)
-		return ReadyMsg(content)
-	}
-}

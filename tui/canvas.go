@@ -8,15 +8,15 @@ import (
 
 type Canvas struct {
 	viewport viewport.Model
-	content  string
-	ready    bool
-	mode     mode
+	//	content  string
+	ready bool
+	mode  mode
 }
 
 func NewCanvas() Canvas {
 	c := Canvas{
-		mode:    nav,
-		content: "Bougie, a tiny sparking Gopher browser",
+		mode: nav,
+		//	content: "Bougie, a tiny sparking Gopher browser",
 	}
 
 	return c
@@ -33,7 +33,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		if !c.ready {
 			c.viewport = viewport.New(constants.WindowWidth, constants.WindowHeight)
-			c.viewport.SetContent(c.content)
+			// c.viewport.SetContent(c.content)
 			c.ready = true
 		} else {
 			c.viewport.Width = constants.WindowWidth
@@ -42,8 +42,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		}
 
 	case ReadyMsg:
-		c.content = string(msg)
-		c.viewport.SetContent(c.content)
+		c.viewport.SetContent(string(msg.response.Body))
 
 	case ModeMsg:
 		c.mode = mode(msg)

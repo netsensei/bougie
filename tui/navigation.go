@@ -35,6 +35,10 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+
+	case QueryMsg:
+		m.input.Placeholder = msg.url
+
 	case ModeMsg:
 		m.mode = mode(msg)
 		switch mode(msg) {
