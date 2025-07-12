@@ -12,8 +12,14 @@ type QueryMsg struct {
 }
 
 type ReadyMsg struct {
+	doc     string
 	content string
-	links   map[int]string
+	links   []map[int]string
+}
+
+type RedrawMsg struct {
+	content  string
+	position int
 }
 
 type ModeMsg mode
@@ -31,19 +37,30 @@ func SendQueryCmd(url string) tea.Cmd {
 		response, _ := request.Do(ctx)
 
 		content := ""
-		links := make(map[int]string)
+		links := []map[int]string{}
 
 		// Parse the response
 		switch request.ItemType {
 		case gopher.ItemTypeText:
 			content = response.Body
 		case gopher.ItemTypeDirectory:
-			content, links, _ = gopher.ParseDirectory([]byte(response.Body))
+			content, links, _ = gopher.ParseDirectory([]byte(response.Body), 0)
 		}
 
 		return ReadyMsg{
 			content: content,
+			doc:     response.Body,
 			links:   links,
+		}
+	}
+}
+
+func RedrawCmd(doc string, position int) tea.Cmd {
+	return func() tea.Msg {
+		content, _, _ := gopher.ParseDirectory([]byte(doc), position)
+		return RedrawMsg{
+			content:  content,
+			position: position,
 		}
 	}
 }

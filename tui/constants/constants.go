@@ -18,10 +18,12 @@ var (
 var InputStyle = lipgloss.NewStyle()
 
 type keymap struct {
-	Quit  key.Binding
-	Nav   key.Binding
-	View  key.Binding
-	Enter key.Binding
+	Quit    key.Binding
+	Nav     key.Binding
+	View    key.Binding
+	Enter   key.Binding
+	Tab     key.Binding
+	BackTab key.Binding
 }
 
 // Keymap reusable key mappings shared across models
@@ -45,5 +47,13 @@ var Keymap = keymap{
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "Query"),
+	),
+	Tab: key.NewBinding(
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "Next item"),
+	),
+	BackTab: key.NewBinding(
+		key.WithKeys("shift+tab"),
+		key.WithHelp("shift+tab", "Previous item"),
 	),
 }

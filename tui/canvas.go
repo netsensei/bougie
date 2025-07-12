@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/netsensei/bougie/tui/constants"
@@ -8,9 +9,11 @@ import (
 
 type Canvas struct {
 	viewport viewport.Model
-	//	content  string
-	ready bool
-	mode  mode
+	ready    bool
+	mode     mode
+	doc      string
+	links    []map[int]string
+	active   int
 }
 
 func NewCanvas() Canvas {
@@ -28,6 +31,7 @@ func (m Canvas) Init() tea.Cmd {
 
 func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 	var cmd tea.Cmd
+	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -42,13 +46,48 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		}
 
 	case ReadyMsg:
+		c.doc = msg.doc
+		c.links = msg.links
 		c.viewport.SetContent(string(msg.content))
+
+	case RedrawMsg:
+		c.viewport.SetContent(msg.content)
+		offset := msg.position - (c.viewport.Height / 2)
+		c.viewport.SetYOffset(offset)
 
 	case ModeMsg:
 		c.mode = mode(msg)
 
 	case tea.KeyMsg:
 		if c.mode == view {
+			if key.Matches(msg, constants.Keymap.Tab) {
+				if c.active < len(c.links)-1 {
+					c.active++
+				}
+
+				keys := []int{}
+				for k := range c.links[c.active] {
+					keys = append(keys, k)
+				}
+
+				cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
+				return c, tea.Batch(cmds...)
+			}
+
+			if key.Matches(msg, constants.Keymap.BackTab) {
+				if c.active > 0 {
+					c.active--
+				}
+
+				keys := []int{}
+				for k := range c.links[c.active] {
+					keys = append(keys, k)
+				}
+
+				cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
+				return c, tea.Batch(cmds...)
+			}
+
 			c.viewport, cmd = c.viewport.Update(msg)
 		}
 	}

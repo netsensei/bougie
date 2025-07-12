@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func ParseDirectory(body []byte) (string, map[int]string, error) {
+func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 	types := map[string]string{
 		"0": "[TXT]",
 		"1": "[SUB]",
@@ -27,13 +27,13 @@ func ParseDirectory(body []byte) (string, map[int]string, error) {
 		"T": "[327]",
 	}
 
-	styleType := lipgloss.NewStyle().
+	styleLink := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("#7D56F4"))
 
-	// styleActiveLink := lipgloss.NewStyle().
-	// 	Bold(true).
-	// 	Foreground(lipgloss.Color("#CC56F4"))
+	styleActiveLink := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#CC56F4"))
 
 	styleText := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#FAFAFA"))
@@ -43,7 +43,7 @@ func ParseDirectory(body []byte) (string, map[int]string, error) {
 	scanner := bufio.NewScanner(reader)
 	var buffer bytes.Buffer
 
-	links := make(map[int]string)
+	var links []map[int]string
 
 	lnumber := 0
 	for scanner.Scan() {
@@ -68,7 +68,11 @@ func ParseDirectory(body []byte) (string, map[int]string, error) {
 
 		case ItemTypeText:
 		case ItemTypeDirectory:
-			line = styleType.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\n"
+			line = styleLink.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\n"
+			if lnumber == active || active == 0 {
+				line = styleActiveLink.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\n"
+				active = -1 // reset active to -1 so we don't highlight again
+			}
 
 			host := lp[2]
 			if lp[3] != "" {
@@ -81,23 +85,33 @@ func ParseDirectory(body []byte) (string, map[int]string, error) {
 				Path:   itype + lp[1],
 			}
 
-			links[lnumber] = url.String()
+			links = append(links, map[int]string{lnumber: url.String()})
 
 		case ItemTypeCCSO:
+			fallthrough
 		case ItemType3270:
+			fallthrough
 		case ItemTypeHex:
+			fallthrough
 		case ItemTypeDOS:
+			fallthrough
 		case ItemTypeUUE:
+			fallthrough
 		case ItemTypeSEA:
+			fallthrough
 		case ItemTypeTelnet:
+			fallthrough
 		case ItemTypeBinary:
+			fallthrough
 		case ItemTypeAlt:
+			fallthrough
 		case ItemTypeGIF:
+			fallthrough
 		case ItemTypeImage:
-			line = styleType.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\t" + styleText.Render(lp[1]) + "\n"
+			line = styleLink.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\t" + styleText.Render(lp[1]) + "\n"
 
 		default:
-			line = styleType.Render("[***]") + "\t" + styleText.Render(lp[0]) + "\n"
+			line = styleText.Render("[***]") + "\t" + styleText.Render(lp[0]) + "\n"
 
 		}
 
