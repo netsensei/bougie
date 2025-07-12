@@ -67,6 +67,7 @@ func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 			line = "\t" + styleText.Render(lp[0]) + "\n"
 
 		case ItemTypeText:
+			fallthrough
 		case ItemTypeDirectory:
 			line = styleLink.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\n"
 			if lnumber == active || active == 0 {
