@@ -55,7 +55,7 @@ func (m Browser) Init() tea.Cmd {
 	var cmds []tea.Cmd
 
 	cmds = append(cmds, m.status.Init())
-	cmds = append(cmds, SendQueryCmd("gopher://floodgap.com"))
+	cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
 
 	return tea.Batch(cmds...)
 }
@@ -83,11 +83,11 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if key.Matches(msg, constants.Keymap.Nav) {
-			cmds = append(cmds, setBrowserModeCmd(nav))
+			cmds = append(cmds, SetBrowserModeCmd(nav))
 		}
 
 		if key.Matches(msg, constants.Keymap.View) {
-			cmds = append(cmds, setBrowserModeCmd(view))
+			cmds = append(cmds, SetBrowserModeCmd(view))
 		}
 	}
 

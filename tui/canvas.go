@@ -112,7 +112,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 					keys = append(keys, k)
 				}
 
-				cmds = append(cmds, SendQueryCmd(c.links[c.active][keys[0]]))
+				cmds = append(cmds, StartQueryCmd(c.links[c.active][keys[0]]))
 				return c, tea.Batch(cmds...)
 			}
 

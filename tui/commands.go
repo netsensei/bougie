@@ -24,9 +24,17 @@ type RedrawMsg struct {
 
 type ModeMsg mode
 
-func setBrowserModeCmd(mode mode) tea.Cmd {
+func SetBrowserModeCmd(mode mode) tea.Cmd {
 	return func() tea.Msg {
 		return ModeMsg(mode)
+	}
+}
+
+func StartQueryCmd(url string) tea.Cmd {
+	return func() tea.Msg {
+		return QueryMsg{
+			url: url,
+		}
 	}
 }
 
