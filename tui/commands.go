@@ -11,7 +11,12 @@ type QueryMsg struct {
 	url string
 }
 
+type AddHistoryMsg struct {
+	url string
+}
+
 type ReadyMsg struct {
+	url     string
 	doc     string
 	content string
 	links   []map[int]string
@@ -38,6 +43,14 @@ func StartQueryCmd(url string) tea.Cmd {
 	}
 }
 
+func AddHistoryCmd(url string) tea.Cmd {
+	return func() tea.Msg {
+		return AddHistoryMsg{
+			url: url,
+		}
+	}
+}
+
 func SendQueryCmd(url string) tea.Cmd {
 	return func() tea.Msg {
 		ctx := context.TODO()
@@ -56,6 +69,7 @@ func SendQueryCmd(url string) tea.Cmd {
 		}
 
 		return ReadyMsg{
+			url:     url,
 			content: content,
 			doc:     response.Body,
 			links:   links,

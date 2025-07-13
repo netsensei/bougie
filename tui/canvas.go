@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/netsensei/bougie/history"
 	"github.com/netsensei/bougie/tui/constants"
 )
 
@@ -14,11 +15,16 @@ type Canvas struct {
 	doc      string
 	links    []map[int]string
 	active   int
+	history  *history.History
 }
 
 func NewCanvas() Canvas {
 	c := Canvas{
 		mode: nav,
+		history: &history.History{
+			Position: 0,
+			Length:   0,
+		},
 		//	content: "Bougie, a tiny sparking Gopher browser",
 	}
 
@@ -69,6 +75,9 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		offset := msg.position - (c.viewport.Height / 2)
 		c.viewport.SetYOffset(offset)
 
+	case AddHistoryMsg:
+		c.history.Add(msg.url)
+
 	case ModeMsg:
 		c.mode = mode(msg)
 
@@ -112,8 +121,33 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 					keys = append(keys, k)
 				}
 
+				cmds = append(cmds, AddHistoryCmd(c.links[c.active][keys[0]]))
 				cmds = append(cmds, StartQueryCmd(c.links[c.active][keys[0]]))
 				return c, tea.Batch(cmds...)
+			}
+
+			if key.Matches(msg, constants.Keymap.PageBackward) {
+				if c.history.Length > 0 {
+					c.history.Backward()
+					url := c.history.Current()
+					if url != "" {
+						cmds = append(cmds, StartQueryCmd(url))
+						return c, tea.Batch(cmds...)
+					}
+
+				}
+			}
+
+			if key.Matches(msg, constants.Keymap.PageForward) {
+				if c.history.Length > 0 {
+					c.history.Forward()
+					url := c.history.Current()
+					if url != "" {
+						cmds = append(cmds, StartQueryCmd(url))
+						return c, tea.Batch(cmds...)
+					}
+
+				}
 			}
 
 			c.viewport, cmd = c.viewport.Update(msg)

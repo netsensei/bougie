@@ -55,6 +55,7 @@ func (m Browser) Init() tea.Cmd {
 	var cmds []tea.Cmd
 
 	cmds = append(cmds, m.status.Init())
+	cmds = append(cmds, AddHistoryCmd("gopher://floodgap.com"))
 	cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
 
 	return tea.Batch(cmds...)
