@@ -55,8 +55,6 @@ func (m Browser) Init() tea.Cmd {
 	var cmds []tea.Cmd
 
 	cmds = append(cmds, m.status.Init())
-	cmds = append(cmds, AddHistoryCmd("gopher://floodgap.com"))
-	cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
 
 	return tea.Batch(cmds...)
 }
@@ -71,6 +69,10 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		constants.WindowWidth = msg.Width
 
 		m.canvas = NewCanvas()
+
+		cmds = append(cmds, AddHistoryCmd("gopher://floodgap.com"))
+		cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
+
 		m.navigation.Width = msg.Width
 		m.status.Width = msg.Width
 
