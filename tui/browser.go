@@ -27,6 +27,8 @@ type status int
 const (
 	ready status = iota
 	loading
+	saving
+	errored
 )
 
 type Browser struct {

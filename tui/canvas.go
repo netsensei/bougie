@@ -52,23 +52,25 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		}
 
 	case ReadyMsg:
-		c.doc = msg.doc
-		c.links = msg.links
-		c.active = 0
+		if msg.err == nil {
+			c.doc = msg.doc
+			c.links = msg.links
+			c.active = 0
 
-		if len(msg.links) > 0 {
-			keys := []int{}
-			for k := range msg.links[0] {
-				keys = append(keys, k)
+			if len(msg.links) > 0 {
+				keys := []int{}
+				for k := range msg.links[0] {
+					keys = append(keys, k)
+				}
+
+				offset := keys[0] - (c.viewport.Height / 2)
+				c.viewport.SetYOffset(offset)
+			} else {
+				c.active = -1 // No links available
 			}
 
-			offset := keys[0] - (c.viewport.Height / 2)
-			c.viewport.SetYOffset(offset)
-		} else {
-			c.active = -1 // No links available
+			c.viewport.SetContent(string(msg.content))
 		}
-
-		c.viewport.SetContent(string(msg.content))
 
 	case RedrawMsg:
 		c.viewport.SetContent(msg.content)
@@ -86,29 +88,29 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			if key.Matches(msg, constants.Keymap.Tab) {
 				if c.active < len(c.links)-1 {
 					c.active++
-				}
 
-				keys := []int{}
-				for k := range c.links[c.active] {
-					keys = append(keys, k)
-				}
+					keys := []int{}
+					for k := range c.links[c.active] {
+						keys = append(keys, k)
+					}
 
-				cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
-				return c, tea.Batch(cmds...)
+					cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
+					return c, tea.Batch(cmds...)
+				}
 			}
 
 			if key.Matches(msg, constants.Keymap.BackTab) {
 				if c.active > 0 {
 					c.active--
-				}
 
-				keys := []int{}
-				for k := range c.links[c.active] {
-					keys = append(keys, k)
-				}
+					keys := []int{}
+					for k := range c.links[c.active] {
+						keys = append(keys, k)
+					}
 
-				cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
-				return c, tea.Batch(cmds...)
+					cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
+					return c, tea.Batch(cmds...)
+				}
 			}
 
 			if key.Matches(msg, constants.Keymap.Enter) {

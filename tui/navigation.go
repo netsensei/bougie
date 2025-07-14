@@ -1,8 +1,10 @@
 package tui
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/netsensei/bougie/tui/constants"
 )
 
 type Navigation struct {
@@ -13,7 +15,7 @@ type Navigation struct {
 
 func NewNavigation() Navigation {
 	input := textinput.New()
-	input.Prompt = "> "
+	input.Prompt = "Bougie > "
 	input.Placeholder = "go to..."
 	input.CharLimit = 250
 	input.Focus()
@@ -50,6 +52,11 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if m.mode == nav {
+			if key.Matches(msg, constants.Keymap.Enter) {
+
+				// return c, tea.Batch(cmds...)
+			}
+
 			m.input, cmd = m.input.Update(msg)
 		}
 

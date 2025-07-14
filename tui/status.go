@@ -17,6 +17,7 @@ type Status struct {
 	mode    mode
 	url     string
 	Width   int
+	err     error
 }
 
 func NewStatus() Status {
@@ -46,7 +47,14 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 		m.status = loading
 		m.url = msg.url
 	case ReadyMsg:
-		m.status = ready
+		if msg.err != nil {
+			m.status = errored
+			m.url = msg.url
+			m.err = msg.err
+		} else {
+			m.status = ready
+			m.err = nil
+		}
 	case ModeMsg:
 		m.mode = mode(msg)
 	default:
@@ -62,6 +70,14 @@ func (m Status) View() string {
 
 	if m.status == loading {
 		status = fmt.Sprintf("%s loading %s...", m.spinner.View(), m.url)
+	}
+
+	if m.status == saving {
+		status = fmt.Sprintf("%s saving %s...", m.spinner.View(), m.url)
+	}
+
+	if m.status == errored {
+		status = fmt.Sprintf("Error: %v", m.err)
 	}
 
 	if m.status == ready {
