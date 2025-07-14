@@ -39,7 +39,7 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case QueryMsg:
-		m.input.Placeholder = msg.url
+		m.input.SetValue(msg.url)
 
 	case ModeMsg:
 		m.mode = mode(msg)
