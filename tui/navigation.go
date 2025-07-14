@@ -53,8 +53,12 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 	case tea.KeyMsg:
 		if m.mode == nav {
 			if key.Matches(msg, constants.Keymap.Enter) {
-
-				// return c, tea.Batch(cmds...)
+				value := m.input.Value()
+				if value != "" {
+					cmds = append(cmds, AddHistoryCmd(value))
+					cmds = append(cmds, StartQueryCmd(value))
+					return m, tea.Batch(cmds...)
+				}
 			}
 
 			m.input, cmd = m.input.Update(msg)
