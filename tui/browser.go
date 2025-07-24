@@ -108,10 +108,14 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+var (
+	InputStyle = lipgloss.NewStyle()
+)
+
 func (m Browser) View() string {
 	if m.quitting {
 		return "Bye!\n"
 	}
 
-	return constants.InputStyle.Render(m.navigation.View() + "\n" + m.canvas.View() + "\n" + m.status.View())
+	return InputStyle.Render(m.navigation.View() + "\n" + m.canvas.View() + "\n" + m.status.View())
 }

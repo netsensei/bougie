@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/netsensei/bougie/tui/constants"
 )
 
 func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
@@ -27,23 +28,35 @@ func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 		"T": "[327]",
 	}
 
-	styleLink := lipgloss.NewStyle().
+	documentStyle := lipgloss.NewStyle()
+	//	Background(lipgloss.Color("#7D56F4"))
+
+	textStyle := lipgloss.NewStyle().
+		Inherit(documentStyle).
+		Width(constants.WindowWidth).
+		Foreground(lipgloss.Color("#FAFAFA"))
+
+	typeStyle := lipgloss.NewStyle().
+		Inherit(documentStyle).
+		Width(6)
+
+	linkStyle := lipgloss.NewStyle().
+		Inherit(typeStyle).
 		Bold(true).
 		Foreground(lipgloss.Color("#7D56F4"))
 
-	styleActiveLink := lipgloss.NewStyle().
+	activeLinkStyle := lipgloss.NewStyle().
+		Inherit(typeStyle).
 		Bold(true).
 		Foreground(lipgloss.Color("#CC56F4"))
-
-	styleText := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FAFAFA"))
 
 	// Let's go
 	reader := bytes.NewReader(body)
 	scanner := bufio.NewScanner(reader)
-	var buffer bytes.Buffer
 
 	var links []map[int]string
+
+	doc := strings.Builder{}
 
 	lnumber := 0
 	for scanner.Scan() {
@@ -64,16 +77,21 @@ func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 
 		switch itype {
 		case ItemTypeNCInformation:
-			line = "\t" + styleText.Render(lp[0]) + "\n"
+			text := textStyle.Render(lp[0])
+			itemType := typeStyle.Render("")
+			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
 
 		case ItemTypeText:
 			fallthrough
 		case ItemTypeDirectory:
-			line = styleLink.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\n"
+			text := textStyle.Render(lp[0])
+			itemType := linkStyle.Render(types[itype])
 			if lnumber == active || active == 0 {
-				line = styleActiveLink.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\n"
+				itemType = activeLinkStyle.Render(types[itype])
 				active = -1 // reset active to -1 so we don't highlight again
 			}
+
+			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
 
 			host := lp[2]
 			if lp[3] != "" {
@@ -109,17 +127,22 @@ func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 		case ItemTypeGIF:
 			fallthrough
 		case ItemTypeImage:
-			line = styleLink.Render(types[itype]) + "\t" + styleText.Render(lp[0]) + "\t" + styleText.Render(lp[1]) + "\n"
+			text := textStyle.Render(lp[0])
+			itemType := linkStyle.Render(types[itype])
+			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
+
+			// line = linkStyle.Render(types[itype]) + " " + textStyle.Render(lp[0]) + "\t" + textStyle.Render(lp[1])
 
 		default:
-			line = styleText.Render("[***]") + "\t" + styleText.Render(lp[0]) + "\n"
-
+			text := textStyle.Render(lp[0])
+			itemType := typeStyle.Render("[***]")
+			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
 		}
 
 		lnumber++
 
-		buffer.WriteString(line)
+		doc.WriteString(line + "\n")
 	}
 
-	return buffer.String(), links, nil
+	return doc.String(), links, nil
 }

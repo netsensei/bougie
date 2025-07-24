@@ -66,14 +66,16 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 
 func (m Status) View() string {
 	var status string
+	var statusMsg string
 	var mode string
 
 	if m.status == loading {
-		status = fmt.Sprintf("%s loading %s...", m.spinner.View(), m.url)
+		statusMsg = fmt.Sprintf("loading %s...", m.url)
+
 	}
 
 	if m.status == saving {
-		status = fmt.Sprintf("%s saving %s...", m.spinner.View(), m.url)
+		statusMsg = fmt.Sprintf("saving %s...", m.url)
 	}
 
 	if m.status == errored {
@@ -91,37 +93,35 @@ func (m Status) View() string {
 		mode = "View"
 	}
 
-	var statusBarStyle = lipgloss.NewStyle().
-		Padding(1, 0).
-		Bold(true)
-	// Foreground(lipgloss.AdaptiveColor{Light: "#343433", Dark: "#C1C6B2"}).
-	// Background(lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#353533"})
+	barStyle := lipgloss.NewStyle().
+		Background(lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#6124DF"})
 
-	var statusStyle = lipgloss.NewStyle().
-		Inherit(statusBarStyle)
-		// Foreground(lipgloss.Color("#FFFDF5")).
-		// Background(lipgloss.Color("#FF5F87")).
-		// Padding(0, 1)
+	statusMsgStyle := lipgloss.NewStyle().
+		Inherit(barStyle)
 
-	var modeStyle = lipgloss.NewStyle().
-		Inherit(statusBarStyle).
-		Foreground(lipgloss.Color("#FFFDF5")).
-		Background(lipgloss.Color("#6124DF")).
-		Padding(0, 1).
-		Align(lipgloss.Right)
+	if m.status == saving || m.status == loading {
+		statusKey := statusMsgStyle.Render(statusMsg)
+		status = lipgloss.JoinHorizontal(lipgloss.Top, m.spinner.View(), statusKey)
+	}
+
+	statusStyle := lipgloss.NewStyle().
+		Inherit(barStyle).
+		Width(lipgloss.Width(status)+2).
+		Padding(0, 1)
+
+	modeStyle := lipgloss.NewStyle().
+		Inherit(barStyle).
+		Width(10).
+		Align(lipgloss.Center)
 
 	statusKey := statusStyle.Render(status)
 	modeKey := modeStyle.Render(mode)
 	midKey := lipgloss.NewStyle().
-		Inherit(statusBarStyle).
-		Width(m.Width - lipgloss.Width(statusKey) - lipgloss.Width(modeKey)).
+		Inherit(barStyle).
+		Width(constants.WindowWidth - lipgloss.Width(statusKey) - lipgloss.Width(modeKey)).
 		Render(" ")
 
-	bar := lipgloss.JoinHorizontal(lipgloss.Top,
-		statusKey,
-		midKey,
-		modeKey,
-	)
+	bar := lipgloss.JoinHorizontal(lipgloss.Top, statusKey, midKey, modeKey)
 
-	return statusBarStyle.Width(m.Width).Render(bar)
+	return bar
 }
