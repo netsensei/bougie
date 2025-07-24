@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/netsensei/bougie/history"
 	"github.com/netsensei/bougie/tui/constants"
 )
@@ -162,5 +163,8 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 }
 
 func (c Canvas) View() string {
-	return c.viewport.View()
+	vpStyle := lipgloss.NewStyle().
+		Padding(0, 1)
+
+	return vpStyle.Render(c.viewport.View())
 }

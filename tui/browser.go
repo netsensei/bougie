@@ -60,6 +60,10 @@ func (m Browser) Init() tea.Cmd {
 
 	cmds = append(cmds, m.status.Init())
 
+	cmds = append(cmds, SetBrowserModeCmd(view))
+	cmds = append(cmds, AddHistoryCmd("gopher://floodgap.com"))
+	cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
+
 	return tea.Batch(cmds...)
 }
 
@@ -77,10 +81,6 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			constants.WindowHeight = msg.Height - lipgloss.Height(m.navigation.View()) - lipgloss.Height(m.status.View())
 			constants.WindowWidth = msg.Width
 		}
-
-		cmds = append(cmds, SetBrowserModeCmd(view))
-		cmds = append(cmds, AddHistoryCmd("gopher://floodgap.com"))
-		cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
 
 	case QueryMsg:
 		cmds = append(cmds, SendQueryCmd(msg.url))
