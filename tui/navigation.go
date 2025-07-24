@@ -9,7 +9,6 @@ import (
 
 type Navigation struct {
 	input textinput.Model
-	Width int
 	mode  mode
 }
 

@@ -6,17 +6,14 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/netsensei/bougie/tui/constants"
 )
-
-// var style = lipgloss.NewStyle().
-// 	Bold(true)
 
 type Status struct {
 	spinner spinner.Model
 	status  status
 	mode    mode
 	url     string
-	Width   int
 	err     error
 }
 

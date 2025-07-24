@@ -37,17 +37,19 @@ type Browser struct {
 	navigation Navigation
 	// mode       mode
 	quitting bool
-	// ready    bool
+	ready    bool
 }
 
 func initBrowser() (tea.Model, tea.Cmd) {
 	status := NewStatus()
 	navigation := NewNavigation()
+	canvas := NewCanvas()
 
 	m := Browser{
 		// mode:       nav,
 		status:     status,
 		navigation: navigation,
+		canvas:     canvas,
 	}
 
 	return m, func() tea.Msg { return nil }
@@ -67,16 +69,17 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		constants.WindowHeight = msg.Height - lipgloss.Height(m.navigation.View()) - lipgloss.Height(m.status.View()) - 2
-		constants.WindowWidth = msg.Width
+		if !m.ready {
+			m.ready = true
+		}
 
-		m.canvas = NewCanvas()
+		if m.ready {
+			constants.WindowHeight = msg.Height - lipgloss.Height(m.navigation.View()) - lipgloss.Height(m.status.View())
+			constants.WindowWidth = msg.Width
+		}
 
 		cmds = append(cmds, AddHistoryCmd("gopher://floodgap.com"))
 		cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
-
-		m.navigation.Width = msg.Width
-		m.status.Width = msg.Width
 
 	case QueryMsg:
 		cmds = append(cmds, SendQueryCmd(msg.url))
