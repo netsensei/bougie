@@ -78,6 +78,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			constants.WindowWidth = msg.Width
 		}
 
+		cmds = append(cmds, SetBrowserModeCmd(view))
 		cmds = append(cmds, AddHistoryCmd("gopher://floodgap.com"))
 		cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
 

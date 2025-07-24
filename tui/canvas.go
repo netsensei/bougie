@@ -74,6 +74,8 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			}
 
 			c.viewport.SetContent(string(msg.content))
+			cmds = append(cmds, SetBrowserModeCmd(view))
+			return c, tea.Batch(cmds...)
 		}
 
 	case RedrawMsg:
