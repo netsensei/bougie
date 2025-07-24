@@ -1,8 +1,6 @@
 package tui
 
 import (
-	"log"
-
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -47,12 +45,10 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			c.viewport = viewport.New(constants.WindowWidth, constants.WindowHeight)
 			// c.viewport.SetContent(c.content)
 			c.ready = true
-			log.Printf("Viewport updated: %d x %d", c.viewport.Width, c.viewport.Height)
 		} else {
 			c.viewport.Width = constants.WindowWidth
 			c.viewport.Height = constants.WindowHeight
 			c.viewport, cmd = c.viewport.Update(msg)
-			log.Printf("Viewport updated: %d x %d", c.viewport.Width, c.viewport.Height)
 		}
 
 	case ReadyMsg:
