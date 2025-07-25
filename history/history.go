@@ -1,7 +1,5 @@
 package history
 
-import "log"
-
 type History struct {
 	Entries  [20]string
 	Position int
@@ -42,6 +40,5 @@ func (h *History) Current() string {
 		return ""
 	}
 
-	log.Printf("entries: %v, position: %d", h.Entries, h.Position)
 	return h.Entries[h.Position]
 }
