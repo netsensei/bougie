@@ -27,12 +27,16 @@ type Response struct {
 
 func New(u string) *Request {
 	p, _ := url.Parse(u)
+
 	r := &Request{
 		Host:     p.Hostname(),
 		Port:     "70",
 		ItemType: "1",
 		Selector: "\r\n",
-		Query:    "",
+	}
+
+	if len(p.Query()) > 0 {
+		r.Query = p.Query().Get("q")
 	}
 
 	if len(p.Port()) > 0 {
@@ -47,7 +51,7 @@ func New(u string) *Request {
 			r.Query = items[1]
 		}
 		parts[len(parts)-1] = strings.Replace(parts[len(parts)-1], "%09", "\t", 1)
-		r.Selector = "/" + strings.Join(parts[2:], "/") + "\r\n"
+		r.Selector = "/" + strings.Join(parts[2:], "/")
 	}
 
 	return r
@@ -67,7 +71,12 @@ func (r *Request) Do(ctx context.Context) (*Response, error) {
 	}
 	defer cnx.Close()
 
-	fmt.Fprintf(cnx, "%s", r.Selector)
+	if r.Query != "" {
+		fmt.Fprintf(cnx, "%s\t%s%s", r.Selector, r.Query, "\r\n")
+	} else {
+		fmt.Fprintf(cnx, "%s%s", r.Selector, "\r\n")
+	}
+
 	data, err := io.ReadAll(io.LimitReader(cnx, 1024*1024))
 	if err != nil {
 		return nil, err

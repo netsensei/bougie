@@ -83,6 +83,8 @@ func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 
 		case ItemTypeText:
 			fallthrough
+		case ItemTypeSEA:
+			fallthrough
 		case ItemTypeDirectory:
 			text := textStyle.Render(lp[0])
 			itemType := linkStyle.Render(types[itype])
@@ -115,8 +117,6 @@ func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 		case ItemTypeDOS:
 			fallthrough
 		case ItemTypeUUE:
-			fallthrough
-		case ItemTypeSEA:
 			fallthrough
 		case ItemTypeTelnet:
 			fallthrough

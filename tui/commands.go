@@ -9,11 +9,18 @@ import (
 	"github.com/netsensei/bougie/gopher"
 )
 
-type QueryMsg struct {
+type GopherQueryMsg struct {
+	url     string
+	request *gopher.Request
+}
+
+type SchemeErrorMsg struct{}
+
+type AddHistoryMsg struct {
 	url string
 }
 
-type AddHistoryMsg struct {
+type SearchMsg struct {
 	url string
 }
 
@@ -40,49 +47,45 @@ func SetBrowserModeCmd(mode mode) tea.Cmd {
 
 func StartQueryCmd(url string) tea.Cmd {
 	return func() tea.Msg {
-		return QueryMsg{
-			url: url,
+		purl, _ := purl.Parse(url)
+
+		switch purl.Scheme {
+		case "gopher":
+			request := gopher.New(purl.String())
+
+			if request.ItemType == gopher.ItemTypeSEA {
+				if len(purl.Query()) == 0 {
+					return SearchMsg{
+						url: url,
+					}
+				}
+			}
+
+			return GopherQueryMsg{
+				url:     url,
+				request: request,
+			}
 		}
+
+		return SchemeErrorMsg{}
 	}
 }
 
-func AddHistoryCmd(url string) tea.Cmd {
-	return func() tea.Msg {
-		return AddHistoryMsg{
-			url: url,
-		}
-	}
-}
-
-func SendQueryCmd(url string) tea.Cmd {
+func SendGopherQueryCmd(request *gopher.Request, url string) tea.Cmd {
 	return func() tea.Msg {
 		content := ""
 		doc := ""
 		var links []map[int]string
 		var err error
 
-		purl, _ := purl.Parse(url)
-
-		switch purl.Scheme {
-		case "gopher":
-			// Handle Gopher protocol
-			content, doc, links, err = handleGopher(purl)
-			if err != nil {
-				return ReadyMsg{
-					url:     url,
-					content: "",
-					doc:     "",
-					links:   links,
-					err:     err,
-				}
-			}
-		default:
+		content, doc, links, err = handleGopher(request)
+		if err != nil {
 			return ReadyMsg{
 				url:     url,
-				content: "Unsupported protocol",
+				content: "",
 				doc:     "",
-				links:   nil,
-				err:     nil,
+				links:   links,
+				err:     err,
 			}
 		}
 
@@ -92,6 +95,14 @@ func SendQueryCmd(url string) tea.Cmd {
 			doc:     doc,
 			links:   links,
 			err:     nil,
+		}
+	}
+}
+
+func AddHistoryCmd(url string) tea.Cmd {
+	return func() tea.Msg {
+		return AddHistoryMsg{
+			url: url,
 		}
 	}
 }
@@ -106,12 +117,11 @@ func RedrawCmd(doc string, position int) tea.Cmd {
 	}
 }
 
-func handleGopher(url *purl.URL) (string, string, []map[int]string, error) {
+func handleGopher(request *gopher.Request) (string, string, []map[int]string, error) {
 	var links []map[int]string
 	var content string
 
 	ctx := context.TODO()
-	request := gopher.New(url.String())
 	response, err := request.Do(ctx)
 	if err != nil {
 		err = fmt.Errorf("could not reach gopher server: %v", err)
@@ -122,10 +132,11 @@ func handleGopher(url *purl.URL) (string, string, []map[int]string, error) {
 	switch request.ItemType {
 	case gopher.ItemTypeText:
 		content = response.Body
+	case gopher.ItemTypeSEA:
+		fallthrough
 	case gopher.ItemTypeDirectory:
 		content, links, _ = gopher.ParseDirectory([]byte(response.Body), 0)
 	}
 
 	return content, response.Body, links, nil
-
 }

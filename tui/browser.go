@@ -20,6 +20,7 @@ type mode int
 const (
 	nav mode = iota
 	view
+	search
 )
 
 type status int
@@ -82,8 +83,8 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			constants.WindowWidth = msg.Width
 		}
 
-	case QueryMsg:
-		cmds = append(cmds, SendQueryCmd(msg.url))
+	case GopherQueryMsg:
+		cmds = append(cmds, SendGopherQueryCmd(msg.request, msg.url))
 
 	case tea.KeyMsg:
 		if key.Matches(msg, constants.Keymap.Quit) {

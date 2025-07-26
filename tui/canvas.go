@@ -11,6 +11,7 @@ import (
 
 type Canvas struct {
 	viewport viewport.Model
+	search   Search
 	ready    bool
 	mode     mode
 	doc      string
@@ -49,7 +50,6 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		} else {
 			c.viewport.Width = constants.WindowWidth
 			c.viewport.Height = constants.WindowHeight
-			c.viewport, cmd = c.viewport.Update(msg)
 		}
 
 	case ReadyMsg:
@@ -72,8 +72,14 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 
 			c.viewport.SetContent(string(msg.content))
 			cmds = append(cmds, SetBrowserModeCmd(view))
+
 			return c, tea.Batch(cmds...)
 		}
+
+	case SearchMsg:
+		c.viewport.Height = constants.WindowHeight - 1
+		c.viewport, cmd = c.viewport.Update(msg)
+		cmds = append(cmds, cmd)
 
 	case RedrawMsg:
 		c.viewport.SetContent(msg.content)
@@ -156,15 +162,29 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			}
 
 			c.viewport, cmd = c.viewport.Update(msg)
+			cmds = append(cmds, cmd)
 		}
 	}
 
-	return c, cmd
+	c.search, cmd = c.search.Update(msg)
+	cmds = append(cmds, cmd)
+
+	return c, tea.Batch(cmds...)
 }
 
 func (c Canvas) View() string {
+	searchStyle := lipgloss.NewStyle()
+
 	vpStyle := lipgloss.NewStyle().
 		Padding(0, 1)
 
-	return vpStyle.Render(c.viewport.View())
+	if c.mode == view {
+		return vpStyle.Render(c.viewport.View())
+	} else {
+		searchKey := searchStyle.Render(c.search.View())
+		viewportKey := vpStyle.Render(c.viewport.View())
+
+		return lipgloss.JoinVertical(lipgloss.Top, searchKey, viewportKey)
+	}
+
 }

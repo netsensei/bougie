@@ -40,7 +40,7 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
-	case QueryMsg:
+	case GopherQueryMsg:
 		m.status = loading
 		m.url = msg.url
 	case ReadyMsg:
@@ -88,6 +88,9 @@ func (m Status) View() string {
 	}
 	if m.mode == view {
 		mode = "View"
+	}
+	if m.mode == search {
+		mode = "Search"
 	}
 
 	barStyle := lipgloss.NewStyle().
