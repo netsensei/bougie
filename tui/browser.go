@@ -91,14 +91,6 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return m, tea.Quit
 		}
-
-		if key.Matches(msg, constants.Keymap.Nav) {
-			cmds = append(cmds, SetBrowserModeCmd(nav))
-		}
-
-		if key.Matches(msg, constants.Keymap.View) {
-			cmds = append(cmds, SetBrowserModeCmd(view))
-		}
 	}
 
 	m.navigation, cmd = m.navigation.Update(msg)

@@ -51,6 +51,10 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if m.mode == nav {
+			if key.Matches(msg, constants.Keymap.View) {
+				cmds = append(cmds, SetBrowserModeCmd(view))
+			}
+
 			if key.Matches(msg, constants.Keymap.Enter) {
 				value := m.input.Value()
 				if value != "" {

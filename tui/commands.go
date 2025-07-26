@@ -24,6 +24,8 @@ type SearchMsg struct {
 	url string
 }
 
+type CancelSearchMsg struct{}
+
 type ReadyMsg struct {
 	url     string
 	doc     string
@@ -96,6 +98,12 @@ func SendGopherQueryCmd(request *gopher.Request, url string) tea.Cmd {
 			links:   links,
 			err:     nil,
 		}
+	}
+}
+
+func CancelSearchCmd() tea.Cmd {
+	return func() tea.Msg {
+		return CancelSearchMsg{}
 	}
 }
 

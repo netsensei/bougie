@@ -15,6 +15,8 @@ type Canvas struct {
 	ready    bool
 	mode     mode
 	doc      string
+	content  string
+	vpOffset int
 	links    []map[int]string
 	active   int
 	history  *history.History
@@ -45,11 +47,14 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		if !c.ready {
 			c.viewport = viewport.New(constants.WindowWidth, constants.WindowHeight)
+			c.search = NewSearch(constants.WindowWidth, constants.WindowHeight)
 			// c.viewport.SetContent(c.content)
 			c.ready = true
 		} else {
 			c.viewport.Width = constants.WindowWidth
 			c.viewport.Height = constants.WindowHeight
+			c.search.Width = constants.WindowWidth
+			c.search.Height = constants.WindowHeight
 		}
 
 	case ReadyMsg:
@@ -57,6 +62,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			c.doc = msg.doc
 			c.links = msg.links
 			c.active = 0
+			c.content = msg.content
 
 			if len(msg.links) > 0 {
 				keys := []int{}
@@ -65,6 +71,8 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 				}
 
 				offset := keys[0] - (c.viewport.Height / 2)
+
+				c.vpOffset = offset
 				c.viewport.SetYOffset(offset)
 			} else {
 				c.active = -1 // No links available
@@ -77,9 +85,14 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		}
 
 	case SearchMsg:
-		c.viewport.Height = constants.WindowHeight - 1
-		c.viewport, cmd = c.viewport.Update(msg)
-		cmds = append(cmds, cmd)
+		c.search = NewSearch(constants.WindowWidth, constants.WindowHeight)
+
+	case CancelSearchMsg:
+		c.viewport.SetContent(c.content)
+		c.viewport.SetYOffset(c.vpOffset)
+
+		cmds = append(cmds, SetBrowserModeCmd(view))
+		return c, tea.Batch(cmds...)
 
 	case RedrawMsg:
 		c.viewport.SetContent(msg.content)
@@ -94,6 +107,10 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if c.mode == view {
+			if key.Matches(msg, constants.Keymap.Nav) {
+				cmds = append(cmds, SetBrowserModeCmd(nav))
+			}
+
 			if key.Matches(msg, constants.Keymap.Tab) {
 				if c.active < len(c.links)-1 {
 					c.active++
@@ -178,13 +195,9 @@ func (c Canvas) View() string {
 	vpStyle := lipgloss.NewStyle().
 		Padding(0, 1)
 
-	if c.mode == view {
-		return vpStyle.Render(c.viewport.View())
+	if c.mode == search {
+		return searchStyle.Render(c.search.View())
 	} else {
-		searchKey := searchStyle.Render(c.search.View())
-		viewportKey := vpStyle.Render(c.viewport.View())
-
-		return lipgloss.JoinVertical(lipgloss.Top, searchKey, viewportKey)
+		return vpStyle.Render(c.viewport.View())
 	}
-
 }
