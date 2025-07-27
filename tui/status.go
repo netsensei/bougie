@@ -84,13 +84,16 @@ func (m Status) View() string {
 	}
 
 	if m.mode == nav {
-		mode = "Input"
+		mode = "Navigation"
 	}
 	if m.mode == view {
 		mode = "View"
 	}
 	if m.mode == search {
 		mode = "Search"
+	}
+	if m.mode == input {
+		mode = "Input"
 	}
 
 	barStyle := lipgloss.NewStyle().

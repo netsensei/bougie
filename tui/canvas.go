@@ -4,31 +4,21 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/netsensei/bougie/history"
 	"github.com/netsensei/bougie/tui/constants"
 )
 
 type Canvas struct {
 	viewport viewport.Model
-	search   Search
 	ready    bool
-	mode     mode
 	doc      string
 	content  string
 	vpOffset int
 	links    []map[int]string
 	active   int
-	history  *history.History
 }
 
 func NewCanvas() Canvas {
 	c := Canvas{
-		mode: nav,
-		history: &history.History{
-			Position: 0,
-			Length:   0,
-		},
 		//	content: "Bougie, a tiny sparking Gopher browser",
 	}
 
@@ -47,14 +37,10 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		if !c.ready {
 			c.viewport = viewport.New(constants.WindowWidth, constants.WindowHeight)
-			c.search = NewSearch(constants.WindowWidth, constants.WindowHeight)
-			// c.viewport.SetContent(c.content)
 			c.ready = true
 		} else {
 			c.viewport.Width = constants.WindowWidth
 			c.viewport.Height = constants.WindowHeight
-			c.search.Width = constants.WindowWidth
-			c.search.Height = constants.WindowHeight
 		}
 
 	case ReadyMsg:
@@ -84,9 +70,6 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			return c, tea.Batch(cmds...)
 		}
 
-	case SearchMsg:
-		c.search = NewSearch(constants.WindowWidth, constants.WindowHeight)
-
 	case CancelSearchMsg:
 		c.viewport.SetContent(c.content)
 		c.viewport.SetYOffset(c.vpOffset)
@@ -99,105 +82,63 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		offset := msg.position - (c.viewport.Height / 2)
 		c.viewport.SetYOffset(offset)
 
-	case AddHistoryMsg:
-		c.history.Add(msg.url)
-
-	case ModeMsg:
-		c.mode = mode(msg)
-
 	case tea.KeyMsg:
-		if c.mode == view {
-			if key.Matches(msg, constants.Keymap.Nav) {
-				cmds = append(cmds, SetBrowserModeCmd(nav))
-			}
+		if key.Matches(msg, constants.Keymap.Nav) {
+			cmds = append(cmds, SetBrowserModeCmd(nav))
+		}
 
-			if key.Matches(msg, constants.Keymap.Tab) {
-				if c.active < len(c.links)-1 {
-					c.active++
-
-					keys := []int{}
-					for k := range c.links[c.active] {
-						keys = append(keys, k)
-					}
-
-					cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
-					return c, tea.Batch(cmds...)
-				}
-			}
-
-			if key.Matches(msg, constants.Keymap.BackTab) {
-				if c.active > 0 {
-					c.active--
-
-					keys := []int{}
-					for k := range c.links[c.active] {
-						keys = append(keys, k)
-					}
-
-					cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
-					return c, tea.Batch(cmds...)
-				}
-			}
-
-			if key.Matches(msg, constants.Keymap.Enter) {
-				if len(c.links[c.active]) == 0 {
-					return c, nil // No links to follow
-				}
+		if key.Matches(msg, constants.Keymap.Tab) {
+			if c.active < len(c.links)-1 {
+				c.active++
 
 				keys := []int{}
 				for k := range c.links[c.active] {
 					keys = append(keys, k)
 				}
 
-				cmds = append(cmds, AddHistoryCmd(c.links[c.active][keys[0]]))
-				cmds = append(cmds, StartQueryCmd(c.links[c.active][keys[0]]))
+				cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
 				return c, tea.Batch(cmds...)
 			}
-
-			if key.Matches(msg, constants.Keymap.PageBackward) {
-				if c.history.Length > 0 {
-					c.history.Backward()
-					url := c.history.Current()
-					if url != "" {
-						cmds = append(cmds, StartQueryCmd(url))
-						return c, tea.Batch(cmds...)
-					}
-
-				}
-			}
-
-			if key.Matches(msg, constants.Keymap.PageForward) {
-				if c.history.Length > 0 {
-					c.history.Forward()
-					url := c.history.Current()
-					if url != "" {
-						cmds = append(cmds, StartQueryCmd(url))
-						return c, tea.Batch(cmds...)
-					}
-
-				}
-			}
-
-			c.viewport, cmd = c.viewport.Update(msg)
-			cmds = append(cmds, cmd)
 		}
+
+		if key.Matches(msg, constants.Keymap.BackTab) {
+			if c.active > 0 {
+				c.active--
+
+				keys := []int{}
+				for k := range c.links[c.active] {
+					keys = append(keys, k)
+				}
+
+				cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
+				return c, tea.Batch(cmds...)
+			}
+		}
+
+		if key.Matches(msg, constants.Keymap.Enter) {
+			if len(c.links[c.active]) == 0 {
+				return c, nil // No links to follow
+			}
+
+			keys := []int{}
+			for k := range c.links[c.active] {
+				keys = append(keys, k)
+			}
+
+			cmds = append(cmds, AddHistoryCmd(c.links[c.active][keys[0]]))
+			cmds = append(cmds, StartQueryCmd(c.links[c.active][keys[0]]))
+			return c, tea.Batch(cmds...)
+		}
+
+		c.viewport, cmd = c.viewport.Update(msg)
+		cmds = append(cmds, cmd)
 	}
 
-	c.search, cmd = c.search.Update(msg)
 	cmds = append(cmds, cmd)
 
 	return c, tea.Batch(cmds...)
 }
 
 func (c Canvas) View() string {
-	searchStyle := lipgloss.NewStyle()
-
-	vpStyle := lipgloss.NewStyle().
-		Padding(0, 1)
-
-	if c.mode == search {
-		return searchStyle.Render(c.search.View())
-	} else {
-		return vpStyle.Render(c.viewport.View())
-	}
+	return c.viewport.View()
 }

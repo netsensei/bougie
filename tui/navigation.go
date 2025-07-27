@@ -41,7 +41,6 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 		m.input.SetValue(msg.url)
 
 	case ModeMsg:
-		m.mode = mode(msg)
 		switch mode(msg) {
 		case view:
 			m.input.Blur()
@@ -50,22 +49,20 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 		}
 
 	case tea.KeyMsg:
-		if m.mode == nav {
-			if key.Matches(msg, constants.Keymap.View) {
-				cmds = append(cmds, SetBrowserModeCmd(view))
-			}
-
-			if key.Matches(msg, constants.Keymap.Enter) {
-				value := m.input.Value()
-				if value != "" {
-					cmds = append(cmds, AddHistoryCmd(value))
-					cmds = append(cmds, StartQueryCmd(value))
-					return m, tea.Batch(cmds...)
-				}
-			}
-
-			m.input, cmd = m.input.Update(msg)
+		if key.Matches(msg, constants.Keymap.View) {
+			cmds = append(cmds, SetBrowserModeCmd(view))
 		}
+
+		if key.Matches(msg, constants.Keymap.Enter) {
+			value := m.input.Value()
+			if value != "" {
+				cmds = append(cmds, AddHistoryCmd(value))
+				cmds = append(cmds, StartQueryCmd(value))
+				return m, tea.Batch(cmds...)
+			}
+		}
+
+		m.input, cmd = m.input.Update(msg)
 
 		cmds = append(cmds, cmd)
 	}

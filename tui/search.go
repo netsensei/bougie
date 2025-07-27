@@ -10,28 +10,27 @@ import (
 	"github.com/netsensei/bougie/tui/constants"
 )
 
-type searchDiagogActive int
+type searchDialogCmpnt int
 
 const (
-	input searchDiagogActive = iota
-	cancel
-	ok
+	searchIn searchDialogCmpnt = iota
+	cancelBtn
+	okBtn
 )
 
 type Search struct {
-	input  textinput.Model
-	mode   mode
-	url    string
-	Width  int
-	Height int
-	active searchDiagogActive
+	searchIn    textinput.Model
+	url         string
+	Width       int
+	Height      int
+	activeCmpnt searchDialogCmpnt
 }
 
 func NewSearch(Width int, Height int) Search {
 	return Search{
-		Width:  Width,
-		Height: Height,
-		active: input,
+		Width:       Width,
+		Height:      Height,
+		activeCmpnt: searchIn,
 	}
 }
 
@@ -44,62 +43,63 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
-	case ModeMsg:
-		m.mode = mode(msg)
 
 	case SearchMsg:
-		input := textinput.New()
-		input.Prompt = "Search > "
-		input.Placeholder = "go to..."
-		input.CharLimit = 250
-		input.Focus()
+		in := textinput.New()
+		in.Prompt = "Search > "
+		in.Placeholder = "go to..."
+		in.CharLimit = 250
+		in.Focus()
 
-		m.input = input
+		m.searchIn = in
 		m.url = msg.url
+		m.activeCmpnt = searchIn
 
-		cmds = append(cmds, SetBrowserModeCmd(search))
-		return m, tea.Batch(cmds...)
+		cmd = SetBrowserModeCmd(input)
+		return m, cmd
 
 	case tea.KeyMsg:
-		if m.mode == search {
-			if key.Matches(msg, constants.Keymap.Enter) {
-				value := m.input.Value()
+		if key.Matches(msg, constants.Keymap.Enter) {
+			value := m.searchIn.Value()
 
-				if value != "" && m.active == ok {
-					purl, _ := url.Parse(m.url)
-					q := purl.Query()
-					q.Set("q", value)
-					purl.RawQuery = q.Encode()
+			if value != "" && m.activeCmpnt == okBtn {
+				purl, _ := url.Parse(m.url)
+				q := purl.Query()
+				q.Set("q", value)
+				purl.RawQuery = q.Encode()
 
-					cmds = append(cmds, AddHistoryCmd(purl.String()))
-					cmds = append(cmds, StartQueryCmd(purl.String()))
-					return m, tea.Batch(cmds...)
-				}
-
-				if m.active == cancel {
-					cmds = append(cmds, CancelSearchCmd())
-					return m, tea.Batch(cmds...)
-				}
+				cmds = append(cmds, AddHistoryCmd(purl.String()))
+				cmds = append(cmds, StartQueryCmd(purl.String()))
+				return m, tea.Batch(cmds...)
 			}
 
-			if key.Matches(msg, constants.Keymap.Tab) {
-				switch m.active {
-				case input:
-					m.input.Blur()
-					m.active = ok
-				case ok:
-					m.input.Blur()
-					m.active = cancel
-				case cancel:
-					m.input.Focus()
-					m.active = input
-				}
+			if m.activeCmpnt == cancelBtn {
+				cmds = append(cmds, CancelSearchCmd())
+				return m, tea.Batch(cmds...)
 			}
-
-			m.input, cmd = m.input.Update(msg)
 		}
 
-		return m, cmd
+		if key.Matches(msg, constants.Keymap.Tab) {
+			switch m.activeCmpnt {
+			case searchIn:
+				m.searchIn.Blur()
+				m.activeCmpnt = okBtn
+				cmds = append(cmds, SetBrowserModeCmd(search))
+			case okBtn:
+				m.searchIn.Blur()
+				m.activeCmpnt = cancelBtn
+				cmds = append(cmds, SetBrowserModeCmd(search))
+			case cancelBtn:
+				m.searchIn.Focus()
+				m.activeCmpnt = searchIn
+				cmds = append(cmds, SetBrowserModeCmd(input))
+			}
+		}
+
+		m.searchIn, cmd = m.searchIn.Update(msg)
+		cmds = append(cmds, cmd)
+
+		return m, tea.Batch(cmds...)
 	}
 
 	return m, tea.Batch(cmds...)
@@ -133,19 +133,19 @@ func (m Search) View() string {
 		Underline(true)
 
 	var okButton, cancelButton string
-	switch m.active {
-	case input:
+	switch m.activeCmpnt {
+	case searchIn:
 		okButton = buttonStyle.MarginRight(2).Render("Search")
 		cancelButton = buttonStyle.Render("Cancel")
-	case cancel:
+	case cancelBtn:
 		okButton = buttonStyle.MarginRight(2).Render("Search")
 		cancelButton = activeButtonStyle.Render("Cancel")
-	case ok:
+	case okBtn:
 		okButton = activeButtonStyle.MarginRight(2).Render("Search")
 		cancelButton = buttonStyle.Render("Cancel")
 	}
 
-	question := lipgloss.NewStyle().Width(100).Align(lipgloss.Center).Render(m.input.View())
+	question := lipgloss.NewStyle().Width(100).Align(lipgloss.Center).Render(m.searchIn.View())
 	buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton, cancelButton)
 	ui := lipgloss.JoinVertical(lipgloss.Center, question, buttons)
 
