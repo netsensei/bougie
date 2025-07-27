@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"time"
 )
 
 type Request struct {
@@ -58,7 +59,9 @@ func New(u string) *Request {
 }
 
 func (r *Request) Do(ctx context.Context) (*Response, error) {
-	var d net.Dialer
+	d := net.Dialer{
+		Timeout: 15 * time.Second,
+	}
 
 	types := []string{"0", "1", "3", "7"}
 	if !slices.Contains(types, r.ItemType) {
