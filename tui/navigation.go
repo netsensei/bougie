@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/netsensei/bougie/tui/constants"
 )
 
@@ -14,7 +15,6 @@ type Navigation struct {
 
 func NewNavigation() Navigation {
 	input := textinput.New()
-	input.Prompt = "Bougie > "
 	input.Placeholder = "go to..."
 	input.CharLimit = 250
 	input.Focus()
@@ -71,5 +71,22 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 }
 
 func (m Navigation) View() string {
-	return m.input.View()
+	logoStyle := lipgloss.NewStyle().
+		Background(lipgloss.Color("#F25D94")).
+		Foreground(lipgloss.Color("#FFF7DB")).
+		Align(lipgloss.Center).
+		Width(12)
+
+	navStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FFF7DB")).
+		Background(lipgloss.Color("#555555")).
+		Width(constants.WindowWidth-14).
+		Padding(0, 1)
+
+	logoKey := logoStyle.Render(" « Bougie » ")
+	navKey := navStyle.Render(m.input.View())
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, logoKey, navKey)
+
+	// return m.input.View()
 }
