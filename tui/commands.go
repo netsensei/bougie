@@ -31,7 +31,11 @@ type ReadyMsg struct {
 	doc     string
 	content string
 	links   []map[int]string
-	err     error
+}
+
+type ErrorMsg struct {
+	url string
+	err error
 }
 
 type RedrawMsg struct {
@@ -73,30 +77,36 @@ func StartQueryCmd(url string) tea.Cmd {
 	}
 }
 
-func SendGopherQueryCmd(request *gopher.Request, url string) tea.Cmd {
+func SendGopherCmd(request *gopher.Request, url string) tea.Cmd {
 	return func() tea.Msg {
-		content := ""
-		doc := ""
+		var content string
 		var links []map[int]string
 		var err error
 
-		content, doc, links, err = handleGopher(request)
+		ctx := context.TODO()
+		response, err := request.Do(ctx)
 		if err != nil {
-			return ReadyMsg{
-				url:     url,
-				content: "",
-				doc:     "",
-				links:   links,
-				err:     err,
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("could not reach gopher server: %v", err),
 			}
+		}
+
+		// Process the response
+		switch request.ItemType {
+		case gopher.ItemTypeText:
+			content = response.Body
+		case gopher.ItemTypeSEA:
+			fallthrough
+		case gopher.ItemTypeDirectory:
+			content, links, _ = gopher.ParseDirectory([]byte(response.Body), 0)
 		}
 
 		return ReadyMsg{
 			url:     url,
 			content: content,
-			doc:     doc,
+			doc:     response.Body,
 			links:   links,
-			err:     nil,
 		}
 	}
 }
@@ -123,28 +133,4 @@ func RedrawCmd(doc string, position int) tea.Cmd {
 			position: position,
 		}
 	}
-}
-
-func handleGopher(request *gopher.Request) (string, string, []map[int]string, error) {
-	var links []map[int]string
-	var content string
-
-	ctx := context.TODO()
-	response, err := request.Do(ctx)
-	if err != nil {
-		err = fmt.Errorf("could not reach gopher server: %v", err)
-		return "", "", nil, err
-	}
-
-	// Process the response
-	switch request.ItemType {
-	case gopher.ItemTypeText:
-		content = response.Body
-	case gopher.ItemTypeSEA:
-		fallthrough
-	case gopher.ItemTypeDirectory:
-		content, links, _ = gopher.ParseDirectory([]byte(response.Body), 0)
-	}
-
-	return content, response.Body, links, nil
 }

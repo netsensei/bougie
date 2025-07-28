@@ -43,17 +43,19 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 	case GopherQueryMsg:
 		m.status = loading
 		m.url = msg.url
+
+	case ErrorMsg:
+		m.status = errored
+		m.url = msg.url
+		m.err = msg.err
+
 	case ReadyMsg:
-		if msg.err != nil {
-			m.status = errored
-			m.url = msg.url
-			m.err = msg.err
-		} else {
-			m.status = ready
-			m.err = nil
-		}
+		m.status = ready
+		m.err = nil
+
 	case ModeMsg:
 		m.mode = mode(msg)
+
 	default:
 		m.spinner, cmd = m.spinner.Update(msg)
 	}

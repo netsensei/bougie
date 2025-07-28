@@ -44,31 +44,29 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		}
 
 	case ReadyMsg:
-		if msg.err == nil {
-			c.doc = msg.doc
-			c.links = msg.links
-			c.active = 0
-			c.content = msg.content
+		c.doc = msg.doc
+		c.links = msg.links
+		c.active = 0
+		c.content = msg.content
 
-			if len(msg.links) > 0 {
-				keys := []int{}
-				for k := range msg.links[0] {
-					keys = append(keys, k)
-				}
-
-				offset := keys[0] - (c.viewport.Height / 2)
-
-				c.vpOffset = offset
-				c.viewport.SetYOffset(offset)
-			} else {
-				c.active = -1 // No links available
+		if len(msg.links) > 0 {
+			keys := []int{}
+			for k := range msg.links[0] {
+				keys = append(keys, k)
 			}
 
-			c.viewport.SetContent(string(msg.content))
-			cmds = append(cmds, SetBrowserModeCmd(view))
+			offset := keys[0] - (c.viewport.Height / 2)
 
-			return c, tea.Batch(cmds...)
+			c.vpOffset = offset
+			c.viewport.SetYOffset(offset)
+		} else {
+			c.active = -1 // No links available
 		}
+
+		c.viewport.SetContent(string(msg.content))
+		cmds = append(cmds, SetBrowserModeCmd(view))
+
+		return c, tea.Batch(cmds...)
 
 	case CancelSearchMsg:
 		c.viewport.SetContent(c.content)

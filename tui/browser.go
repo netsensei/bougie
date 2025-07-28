@@ -102,7 +102,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.history.Add(msg.url)
 
 	case GopherQueryMsg:
-		cmds = append(cmds, SendGopherQueryCmd(msg.request, msg.url))
+		cmds = append(cmds, SendGopherCmd(msg.request, msg.url))
 
 	case tea.KeyMsg:
 		if key.Matches(msg, constants.Keymap.Quit) {
