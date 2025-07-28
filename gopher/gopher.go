@@ -23,7 +23,6 @@ type Request struct {
 type Response struct {
 	Body     string
 	ItemType string
-	Request  *Request
 }
 
 func New(u string) *Request {
@@ -88,6 +87,5 @@ func (r *Request) Do(ctx context.Context) (*Response, error) {
 	return &Response{
 		Body:     string(data),
 		ItemType: r.ItemType,
-		Request:  r,
 	}, nil
 }
