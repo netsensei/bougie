@@ -2,12 +2,10 @@ package gopher
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/url"
-	"slices"
 	"strings"
 	"time"
 )
@@ -21,7 +19,7 @@ type Request struct {
 }
 
 type Response struct {
-	Body     string
+	Body     []byte
 	ItemType string
 }
 
@@ -62,11 +60,6 @@ func (r *Request) Do(ctx context.Context) (*Response, error) {
 		Timeout: 15 * time.Second,
 	}
 
-	types := []string{"0", "1", "3", "7"}
-	if !slices.Contains(types, r.ItemType) {
-		return nil, errors.New("unsupported item type for gopher request")
-	}
-
 	cnx, err := d.DialContext(ctx, "tcp", fmt.Sprintf("%s:%s", r.Host, r.Port))
 	if err != nil {
 		return nil, err
@@ -85,7 +78,7 @@ func (r *Request) Do(ctx context.Context) (*Response, error) {
 	}
 
 	return &Response{
-		Body:     string(data),
+		Body:     data,
 		ItemType: r.ItemType,
 	}, nil
 }

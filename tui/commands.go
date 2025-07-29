@@ -4,12 +4,19 @@ import (
 	"context"
 	"fmt"
 	purl "net/url"
+	"os"
+	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/netsensei/bougie/gopher"
 )
 
-type GopherQueryMsg struct {
+type GopherDocumentQueryMsg struct {
+	url     string
+	request *gopher.Request
+}
+
+type GopherFileQueryCmd struct {
 	url     string
 	request *gopher.Request
 }
@@ -31,6 +38,11 @@ type ReadyMsg struct {
 	doc     string
 	content string
 	links   []map[int]string
+}
+
+type FileSavedMsg struct {
+	url      string
+	resource string
 }
 
 type ErrorMsg struct {
@@ -59,6 +71,22 @@ func StartQueryCmd(url string) tea.Cmd {
 		case "gopher":
 			request := gopher.New(purl.String())
 
+			switch request.ItemType {
+			case gopher.ItemTypeBinary:
+				fallthrough
+			case gopher.ItemTypeDOS:
+				fallthrough
+			case gopher.ItemTypeGIF:
+				fallthrough
+			case gopher.ItemTypeHex:
+				fallthrough
+			case gopher.ItemTypeImage:
+				return GopherFileQueryCmd{
+					url:     url,
+					request: request,
+				}
+			}
+
 			if request.ItemType == gopher.ItemTypeSEA {
 				if len(purl.Query()) == 0 {
 					return SearchMsg{
@@ -67,7 +95,7 @@ func StartQueryCmd(url string) tea.Cmd {
 				}
 			}
 
-			return GopherQueryMsg{
+			return GopherDocumentQueryMsg{
 				url:     url,
 				request: request,
 			}
@@ -77,7 +105,7 @@ func StartQueryCmd(url string) tea.Cmd {
 	}
 }
 
-func SendGopherCmd(request *gopher.Request, url string) tea.Cmd {
+func FetchDocumentGopherCmd(request *gopher.Request, url string) tea.Cmd {
 	return func() tea.Msg {
 		var content string
 		var links []map[int]string
@@ -95,18 +123,48 @@ func SendGopherCmd(request *gopher.Request, url string) tea.Cmd {
 		// Process the response
 		switch request.ItemType {
 		case gopher.ItemTypeText:
-			content = response.Body
+			content = string(response.Body)
 		case gopher.ItemTypeSEA:
 			fallthrough
 		case gopher.ItemTypeDirectory:
-			content, links, _ = gopher.ParseDirectory([]byte(response.Body), 0)
+			content, links, _ = gopher.ParseDirectory(response.Body, 0)
 		}
 
 		return ReadyMsg{
 			url:     url,
 			content: content,
-			doc:     response.Body,
+			doc:     string(response.Body),
 			links:   links,
+		}
+	}
+}
+
+func SaveFileGopherCmd(request *gopher.Request, url string) tea.Cmd {
+	return func() tea.Msg {
+		var err error
+
+		resource := filepath.Base(request.Selector)
+
+		ctx := context.TODO()
+		response, err := request.Do(ctx)
+		if err != nil {
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("could not reach gopher server: %v", err),
+			}
+		}
+
+		err = os.WriteFile("./"+resource, response.Body, 0644)
+		if err != nil {
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("could not save file: %v", err),
+			}
+		}
+
+		return FileSavedMsg{
+			url:      url,
+			resource: resource,
 		}
 	}
 }

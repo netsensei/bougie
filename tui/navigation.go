@@ -37,7 +37,10 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 
 	switch msg := msg.(type) {
 
-	case GopherQueryMsg:
+	case GopherFileQueryCmd:
+		m.input.SetValue(msg.url)
+
+	case GopherDocumentQueryMsg:
 		m.input.SetValue(msg.url)
 
 	case ModeMsg:

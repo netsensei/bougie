@@ -81,6 +81,22 @@ func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 			itemType := typeStyle.Render("")
 			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
 
+		case ItemTypeHex:
+			fallthrough
+		case ItemTypeDOS:
+			fallthrough
+		case ItemTypeUUE:
+			fallthrough
+		case ItemTypeTelnet:
+			fallthrough
+		case ItemTypeBinary:
+			fallthrough
+		case ItemTypeAlt:
+			fallthrough
+		case ItemTypeGIF:
+			fallthrough
+		case ItemTypeImage:
+			fallthrough
 		case ItemTypeText:
 			fallthrough
 		case ItemTypeSEA:
@@ -108,30 +124,12 @@ func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
 
 			links = append(links, map[int]string{lnumber: url.String()})
 
-		case ItemTypeCCSO:
-			fallthrough
 		case ItemType3270:
 			fallthrough
-		case ItemTypeHex:
-			fallthrough
-		case ItemTypeDOS:
-			fallthrough
-		case ItemTypeUUE:
-			fallthrough
-		case ItemTypeTelnet:
-			fallthrough
-		case ItemTypeBinary:
-			fallthrough
-		case ItemTypeAlt:
-			fallthrough
-		case ItemTypeGIF:
-			fallthrough
-		case ItemTypeImage:
+		case ItemTypeCCSO:
 			text := textStyle.Render(lp[0])
 			itemType := linkStyle.Render(types[itype])
 			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
-
-			// line = linkStyle.Render(types[itype]) + " " + textStyle.Render(lp[0]) + "\t" + textStyle.Render(lp[1])
 
 		default:
 			text := textStyle.Render(lp[0])

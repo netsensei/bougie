@@ -23,6 +23,7 @@ const (
 	view
 	search
 	input
+	save
 )
 
 type status int
@@ -31,6 +32,7 @@ const (
 	ready status = iota
 	loading
 	saving
+	saved
 	errored
 )
 
@@ -101,8 +103,18 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case AddHistoryMsg:
 		m.history.Add(msg.url)
 
-	case GopherQueryMsg:
-		cmds = append(cmds, SendGopherCmd(msg.request, msg.url))
+	case GopherDocumentQueryMsg:
+		cmds = append(cmds, FetchDocumentGopherCmd(msg.request, msg.url))
+
+	case GopherFileQueryCmd:
+		cmds = append(cmds, SetBrowserModeCmd(save))
+		cmds = append(cmds, SaveFileGopherCmd(msg.request, msg.url))
+
+	case FileSavedMsg:
+		cmds = append(cmds, SetBrowserModeCmd(view))
+
+	case ErrorMsg:
+		cmds = append(cmds, SetBrowserModeCmd(save))
 
 	case tea.KeyMsg:
 		if key.Matches(msg, constants.Keymap.Quit) {
@@ -182,7 +194,7 @@ func (m Browser) View() string {
 	navKey := navStyle.Render(m.navigation.View())
 	statusKey := statusStyle.Render(m.status.View())
 
-	if m.mode == view || m.mode == nav {
+	if m.mode == view || m.mode == nav || m.mode == save {
 		canvasKey := canvasStyle.Render(m.canvas.View())
 		return lipgloss.JoinVertical(lipgloss.Top, navKey, canvasKey, statusKey)
 	} else {
