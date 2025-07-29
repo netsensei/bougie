@@ -114,7 +114,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, SetBrowserModeCmd(view))
 
 	case ErrorMsg:
-		cmds = append(cmds, SetBrowserModeCmd(save))
+		cmds = append(cmds, SetBrowserModeCmd(view))
 
 	case tea.KeyMsg:
 		if key.Matches(msg, constants.Keymap.Quit) {
