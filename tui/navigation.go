@@ -90,6 +90,4 @@ func (m Navigation) View() string {
 	navKey := navStyle.Render(m.input.View())
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, logoKey, navKey)
-
-	// return m.input.View()
 }
