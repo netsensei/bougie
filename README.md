@@ -31,4 +31,4 @@ TBD
 
 ## License
 
-This project is licensed under the GNU GPL version 3. See the [LICENSE][LICENE.txt] file for details.
+This project is licensed under the GNU GPL version 3. See the [LICENSE](LICENE.txt) file for details.
