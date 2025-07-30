@@ -9,14 +9,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// TODO
-//  * Build a status bar
-//  * Show a handy help bar
-//  * Wire up URL parsing CMD
-//  * Wire up Query CMD with error msg & response msg
-//  * Wire up Parsing cmd based on type of gopher content
-//    * Pass gopher request document type via tea.Msg property
-
 type mode int
 
 const (
