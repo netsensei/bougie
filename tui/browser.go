@@ -165,6 +165,13 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				return m, tea.Batch(cmds...)
 			}
+
+			if key.Matches(msg, constants.Keymap.Reload) {
+				url := m.history.Current()
+				cmds = append(cmds, StartQueryCmd(url))
+
+				return m, tea.Batch(cmds...)
+			}
 		}
 
 		return m, cmd

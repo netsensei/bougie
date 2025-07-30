@@ -20,6 +20,7 @@ type keymap struct {
 	Nav          key.Binding
 	View         key.Binding
 	Home         key.Binding
+	Reload       key.Binding
 	Enter        key.Binding
 	Tab          key.Binding
 	BackTab      key.Binding
@@ -33,10 +34,6 @@ var Keymap = keymap{
 		key.WithKeys("ctrl+c", "ctrl+q"),
 		key.WithHelp("ctrl+c/ctrl+q", "Quit"),
 	),
-	// View: key.NewBinding(
-	// 	key.WithKeys("esc"),
-	// 	key.WithHelp("esc", "back"),
-	// ),
 	Nav: key.NewBinding(
 		key.WithKeys("ctrl+n"),
 		key.WithHelp("ctrl+n", "Toggle nav mode"),
@@ -47,7 +44,11 @@ var Keymap = keymap{
 	),
 	Home: key.NewBinding(
 		key.WithKeys("ctrl+h"),
-		key.WithHelp("ctrl+h", "Back to the startpage"),
+		key.WithHelp("ctrl+h", "Go back home"),
+	),
+	Reload: key.NewBinding(
+		key.WithKeys("ctrl+r"),
+		key.WithHelp("ctrl+r", "Reload the current resource"),
 	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),
