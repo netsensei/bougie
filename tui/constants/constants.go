@@ -19,6 +19,7 @@ type keymap struct {
 	Quit         key.Binding
 	Nav          key.Binding
 	View         key.Binding
+	Home         key.Binding
 	Enter        key.Binding
 	Tab          key.Binding
 	BackTab      key.Binding
@@ -43,6 +44,10 @@ var Keymap = keymap{
 	View: key.NewBinding(
 		key.WithKeys("ctrl+v"),
 		key.WithHelp("ctrl+v", "Toggle view mode"),
+	),
+	Home: key.NewBinding(
+		key.WithKeys("ctrl+h"),
+		key.WithHelp("ctrl+h", "Back to the startpage"),
 	),
 	Enter: key.NewBinding(
 		key.WithKeys("enter"),

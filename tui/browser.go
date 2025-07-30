@@ -156,6 +156,15 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			}
+
+			if key.Matches(msg, constants.Keymap.Home) {
+				home := viper.GetString("general.home")
+
+				cmds = append(cmds, AddHistoryCmd(home))
+				cmds = append(cmds, StartQueryCmd(home))
+
+				return m, tea.Batch(cmds...)
+			}
 		}
 
 		return m, cmd
