@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/netsensei/bougie/history"
 	"github.com/netsensei/bougie/tui/constants"
+	"github.com/spf13/viper"
 )
 
 // TODO
@@ -69,11 +70,13 @@ func initBrowser() (tea.Model, tea.Cmd) {
 func (m Browser) Init() tea.Cmd {
 	var cmds []tea.Cmd
 
+	home := viper.GetString("general.home")
+
 	cmds = append(cmds, m.status.Init())
 
 	cmds = append(cmds, SetBrowserModeCmd(view))
-	cmds = append(cmds, AddHistoryCmd("gopher://floodgap.com"))
-	cmds = append(cmds, StartQueryCmd("gopher://floodgap.com"))
+	cmds = append(cmds, AddHistoryCmd(home))
+	cmds = append(cmds, StartQueryCmd(home))
 
 	return tea.Batch(cmds...)
 }
