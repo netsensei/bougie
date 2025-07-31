@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/tui/constants"
 )
 
@@ -52,11 +53,11 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 		}
 
 	case tea.KeyMsg:
-		if key.Matches(msg, constants.Keymap.View) {
+		if key.Matches(msg, config.Keymap.View) {
 			cmds = append(cmds, SetBrowserModeCmd(view))
 		}
 
-		if key.Matches(msg, constants.Keymap.Enter) {
+		if key.Matches(msg, config.Keymap.Enter) {
 			value := m.input.Value()
 			if value != "" {
 				cmds = append(cmds, AddHistoryCmd(value))

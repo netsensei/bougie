@@ -37,6 +37,17 @@ func Init() error {
 
 	// Main configuration
 	viper.SetDefault("general.home", "gopher://floodgap.com")
+	viper.SetDefault("keybindings.quit", []string{"ctrl+c", "ctrl+q"})
+	viper.SetDefault("keybindings.nav", "ctrl+n")
+	viper.SetDefault("keybindings.view", "ctrl+v")
+	viper.SetDefault("keybindings.home", "ctrl+h")
+	viper.SetDefault("keybindings.reload", "ctrl+r")
+	viper.SetDefault("keybindings.enter", "enter")
+	viper.SetDefault("keybindings.item_forward", "tab")
+	viper.SetDefault("keybindings.item_backward", "shift+tab")
+	viper.SetDefault("keybindings.page_forward", "f")
+	viper.SetDefault("keybindings.page_backward", "b")
+	viper.SetDefault("keybindings.component_forward", "tab")
 
 	viper.SetConfigFile(configPath)
 	viper.SetConfigType("toml")
@@ -44,6 +55,8 @@ func Init() error {
 	if err != nil {
 		return err
 	}
+
+	keysInit()
 
 	return nil
 }

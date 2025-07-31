@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/history"
 	"github.com/netsensei/bougie/tui/constants"
 	"github.com/spf13/viper"
@@ -112,7 +113,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, SetBrowserModeCmd(view))
 
 	case tea.KeyMsg:
-		if key.Matches(msg, constants.Keymap.Quit) {
+		if key.Matches(msg, config.Keymap.Quit) {
 			m.quitting = true
 			return m, tea.Quit
 		}
@@ -129,7 +130,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if m.mode == view || m.mode == search {
-			if key.Matches(msg, constants.Keymap.PageBackward) {
+			if key.Matches(msg, config.Keymap.PageBackward) {
 				if m.history.Length > 0 {
 					m.history.Backward()
 					url := m.history.Current()
@@ -139,7 +140,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
-			if key.Matches(msg, constants.Keymap.PageForward) {
+			if key.Matches(msg, config.Keymap.PageForward) {
 				if m.history.Length > 0 {
 					m.history.Forward()
 					url := m.history.Current()
@@ -149,7 +150,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
-			if key.Matches(msg, constants.Keymap.Home) {
+			if key.Matches(msg, config.Keymap.Home) {
 				home := viper.GetString("general.home")
 
 				cmds = append(cmds, AddHistoryCmd(home))
@@ -158,7 +159,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Batch(cmds...)
 			}
 
-			if key.Matches(msg, constants.Keymap.Reload) {
+			if key.Matches(msg, config.Keymap.Reload) {
 				url := m.history.Current()
 				cmds = append(cmds, StartQueryCmd(url))
 

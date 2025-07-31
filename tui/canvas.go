@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/tui/constants"
 )
 
@@ -81,11 +82,11 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		c.viewport.SetYOffset(offset)
 
 	case tea.KeyMsg:
-		if key.Matches(msg, constants.Keymap.Nav) {
+		if key.Matches(msg, config.Keymap.Nav) {
 			cmds = append(cmds, SetBrowserModeCmd(nav))
 		}
 
-		if key.Matches(msg, constants.Keymap.Tab) {
+		if key.Matches(msg, config.Keymap.ItemForward) {
 			if c.active < len(c.links)-1 {
 				c.active++
 
@@ -99,7 +100,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			}
 		}
 
-		if key.Matches(msg, constants.Keymap.BackTab) {
+		if key.Matches(msg, config.Keymap.ItemBackward) {
 			if c.active > 0 {
 				c.active--
 
@@ -113,7 +114,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			}
 		}
 
-		if key.Matches(msg, constants.Keymap.Enter) {
+		if key.Matches(msg, config.Keymap.Enter) {
 			if len(c.links[c.active]) == 0 {
 				return c, nil // No links to follow
 			}

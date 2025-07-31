@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/netsensei/bougie/tui/constants"
+	"github.com/netsensei/bougie/config"
 )
 
 type searchDialogCmpnt int
@@ -49,6 +49,7 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 		in.Prompt = "Search > "
 		in.Placeholder = "go to..."
 		in.CharLimit = 250
+		in.Width = 75
 		in.Focus()
 
 		m.searchIn = in
@@ -59,7 +60,7 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 		return m, cmd
 
 	case tea.KeyMsg:
-		if key.Matches(msg, constants.Keymap.Enter) {
+		if key.Matches(msg, config.Keymap.Enter) {
 			value := m.searchIn.Value()
 
 			if value != "" && m.activeCmpnt == okBtn {
@@ -79,7 +80,7 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 			}
 		}
 
-		if key.Matches(msg, constants.Keymap.Tab) {
+		if key.Matches(msg, config.Keymap.CmpntForward) {
 			switch m.activeCmpnt {
 			case searchIn:
 				m.searchIn.Blur()
@@ -145,7 +146,10 @@ func (m Search) View() string {
 		cancelButton = buttonStyle.Render("Cancel")
 	}
 
-	question := lipgloss.NewStyle().Width(100).Align(lipgloss.Center).Render(m.searchIn.View())
+	question := lipgloss.NewStyle().
+		Width(75).
+		Align(lipgloss.Center).
+		Render(m.searchIn.View())
 	buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton, cancelButton)
 	ui := lipgloss.JoinVertical(lipgloss.Center, question, buttons)
 
