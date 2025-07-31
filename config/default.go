@@ -5,4 +5,17 @@ var defaultConfiguration = []byte(`# Bougie default configuration file
 
 [general]
 home = "gopher://floodgap.com"
+
+[keybindings]
+# quit = ctrl+c/ctrl+q
+# nav = ctrl+n
+# view = ctrl+v
+# home = ctrl+h
+# reload = ctrl+r
+# enter = enter
+# item_forward = tab
+# item_backward = shift+tab
+# component_forward = tab
+# page_forward = f
+# page_backward = b
 `)
