@@ -1,18 +1,28 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/rkoesters/xdg/basedir"
+	"github.com/rkoesters/xdg/userdirs"
 	"github.com/spf13/viper"
 )
 
 var configDir string
 var configPath string
 
+var DownloadsDir string
+
 func Init() error {
+	home, err := homedir.Dir()
+	if err != nil {
+		return err
+	}
+
 	// Configuration location
 	if runtime.GOOS != "windows" {
 		configDir = filepath.Join(basedir.ConfigHome, "bougie")
@@ -21,7 +31,7 @@ func Init() error {
 	configPath = filepath.Join(configDir, "config.toml")
 
 	// Default configuration
-	err := os.MkdirAll(configDir, 0755)
+	err = os.MkdirAll(configDir, 0755)
 	if err != nil {
 		return err
 	}
@@ -37,6 +47,7 @@ func Init() error {
 
 	// Main configuration
 	viper.SetDefault("general.home", "gopher://floodgap.com")
+	viper.SetDefault("general.downloads_directory", "")
 	viper.SetDefault("keybindings.quit", []string{"ctrl+c", "ctrl+q"})
 	viper.SetDefault("keybindings.nav", "ctrl+n")
 	viper.SetDefault("keybindings.view", "ctrl+v")
@@ -57,6 +68,35 @@ func Init() error {
 	}
 
 	keysInit()
+
+	if viper.GetString("general.downloads_directory") == "" {
+		if userdirs.Download == "" {
+			DownloadsDir = filepath.Join(home, "Downloads")
+		} else {
+			DownloadsDir = userdirs.Download
+		}
+
+		err = os.MkdirAll(DownloadsDir, 0755)
+		if err != nil {
+			return fmt.Errorf("downloads directory could not be created: %s", DownloadsDir)
+		}
+	} else {
+		dPath := viper.GetString("general.downloads_directory")
+		di, err := os.Stat(dPath)
+		if err == nil {
+			if !di.IsDir() {
+				return fmt.Errorf("downloads path is not a directory: %s", dPath)
+			}
+		} else if os.IsNotExist(err) {
+			err = os.MkdirAll(dPath, 0755)
+			if err != nil {
+				return fmt.Errorf("downloads directory could not be created: %s", dPath)
+			}
+		} else {
+			return fmt.Errorf("downloads directory is not accesible: %s", dPath)
+		}
+		DownloadsDir = dPath
+	}
 
 	return nil
 }

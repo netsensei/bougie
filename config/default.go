@@ -5,6 +5,7 @@ var defaultConfiguration = []byte(`# Bougie default configuration file
 
 [general]
 home = "gopher://floodgap.com"
+# downloads_dir = ""
 
 [keybindings]
 # quit = ctrl+c/ctrl+q

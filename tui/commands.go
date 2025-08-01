@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/gopher"
 )
 
@@ -141,8 +142,6 @@ func FetchDocumentGopherCmd(request *gopher.Request, url string) tea.Cmd {
 
 func SaveFileGopherCmd(request *gopher.Request, url string) tea.Cmd {
 	return func() tea.Msg {
-		var err error
-
 		resource := filepath.Base(request.Selector)
 
 		ctx := context.TODO()
@@ -154,7 +153,9 @@ func SaveFileGopherCmd(request *gopher.Request, url string) tea.Cmd {
 			}
 		}
 
-		err = os.WriteFile("./"+resource, response.Body, 0644)
+		filePath := filepath.Join(config.DownloadsDir, resource)
+
+		err = os.WriteFile(filePath, response.Body, 0644)
 		if err != nil {
 			return ErrorMsg{
 				url: url,
