@@ -22,8 +22,6 @@ type GopherFileQueryCmd struct {
 	request *gopher.Request
 }
 
-type SchemeErrorMsg struct{}
-
 type AddHistoryMsg struct {
 	url string
 }
@@ -102,7 +100,10 @@ func StartQueryCmd(url string) tea.Cmd {
 			}
 		}
 
-		return SchemeErrorMsg{}
+		return ErrorMsg{
+			url: url,
+			err: fmt.Errorf("unrecognized scheme: %v", purl.Scheme),
+		}
 	}
 }
 
