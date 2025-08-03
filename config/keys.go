@@ -19,6 +19,14 @@ type keymap struct {
 	CmpntForward key.Binding
 	PageForward  key.Binding
 	PageBackward key.Binding
+	HalfPageDown key.Binding
+	HalfPageUp   key.Binding
+	PageDown     key.Binding
+	PageUp       key.Binding
+	Up           key.Binding
+	Down         key.Binding
+	Left         key.Binding
+	Right        key.Binding
 }
 
 var Keymap keymap
@@ -36,6 +44,12 @@ func keysInit() {
 		"CmpntForward": viper.GetStringSlice("keybindings.component_forward"),
 		"PageForward":  viper.GetStringSlice("keybindings.page_forward"),
 		"PageBackward": viper.GetStringSlice("keybindings.page_backward"),
+		"PageDown":     viper.GetStringSlice("keybindings.page_down"),
+		"PageUp":       viper.GetStringSlice("keybindings.page_up"),
+		"Up":           viper.GetStringSlice("keybindings.up"),
+		"Down":         viper.GetStringSlice("keybindings.down"),
+		"Left":         viper.GetStringSlice("keybindings.left"),
+		"Right":        viper.GetStringSlice("keybindings.right"),
 	}
 
 	// Keymap reusable key mappings shared across models
@@ -83,6 +97,38 @@ func keysInit() {
 		CmpntForward: key.NewBinding(
 			key.WithKeys(bindings["CmpntForward"]...),
 			key.WithHelp(strings.Join(bindings["CmpntForward"], ", "), "Select next form element"),
+		),
+		HalfPageDown: key.NewBinding(
+			key.WithKeys(bindings["HalfPageDown"]...),
+			key.WithHelp(strings.Join(bindings["HalfPageDown"], ", "), "Scroll half page down"),
+		),
+		HalfPageUp: key.NewBinding(
+			key.WithKeys(bindings["HalfPageUp"]...),
+			key.WithHelp(strings.Join(bindings["HalfPageUp"], ", "), "Scroll half page up"),
+		),
+		PageDown: key.NewBinding(
+			key.WithKeys(bindings["PageDown"]...),
+			key.WithHelp(strings.Join(bindings["PageDown"], ", "), "Scroll one page down"),
+		),
+		PageUp: key.NewBinding(
+			key.WithKeys(bindings["PageUp"]...),
+			key.WithHelp(strings.Join(bindings["PageUp"], ", "), "Scroll one page up"),
+		),
+		Up: key.NewBinding(
+			key.WithKeys(bindings["Up"]...),
+			key.WithHelp(strings.Join(bindings["Up"], ", "), "Scroll up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys(bindings["Down"]...),
+			key.WithHelp(strings.Join(bindings["Down"], ", "), "Scroll down"),
+		),
+		Left: key.NewBinding(
+			key.WithKeys(bindings["Left"]...),
+			key.WithHelp(strings.Join(bindings["Left"], ", "), "Scroll left"),
+		),
+		Right: key.NewBinding(
+			key.WithKeys(bindings["Right"]...),
+			key.WithHelp(strings.Join(bindings["Right"], ", "), "Scroll right"),
 		),
 	}
 

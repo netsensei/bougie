@@ -38,6 +38,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		if !c.ready {
 			c.viewport = viewport.New(constants.WindowWidth, constants.WindowHeight)
+			c.viewport.KeyMap = CanvasKeyMap()
 			c.ready = true
 		} else {
 			c.viewport.Width = constants.WindowWidth
@@ -140,4 +141,17 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 
 func (c Canvas) View() string {
 	return c.viewport.View()
+}
+
+func CanvasKeyMap() viewport.KeyMap {
+	return viewport.KeyMap{
+		PageDown:     config.Keymap.PageDown,
+		PageUp:       config.Keymap.PageUp,
+		HalfPageUp:   config.Keymap.HalfPageUp,
+		HalfPageDown: config.Keymap.HalfPageDown,
+		Up:           config.Keymap.Up,
+		Down:         config.Keymap.Down,
+		Left:         config.Keymap.Left,
+		Right:        config.Keymap.Right,
+	}
 }
