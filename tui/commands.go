@@ -6,9 +6,11 @@ import (
 	purl "net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/netsensei/bougie/config"
+	"github.com/netsensei/bougie/gemini"
 	"github.com/netsensei/bougie/gopher"
 )
 
@@ -20,6 +22,25 @@ type GopherDocumentQueryMsg struct {
 type GopherFileQueryCmd struct {
 	url     string
 	request *gopher.Request
+}
+
+type GeminiQueryMsg struct {
+	url     string
+	request *gemini.Request
+}
+
+type FetchGemTextGeminiMsg struct {
+	capsule *gemini.Capsule
+	url     string
+}
+
+type SaveFileGeminiMsg struct {
+	capsule *gemini.Capsule
+	url     string
+}
+
+type RedirectQueryGeminiMsg struct {
+	url string
 }
 
 type AddHistoryMsg struct {
@@ -98,11 +119,158 @@ func StartQueryCmd(url string) tea.Cmd {
 				url:     url,
 				request: request,
 			}
+
+		case "gemini":
+			request, _ := gemini.NewRequest(purl.String())
+			return GeminiQueryMsg{
+				url:     url,
+				request: request,
+			}
 		}
 
 		return ErrorMsg{
 			url: url,
 			err: fmt.Errorf("unrecognized scheme: %v", purl.Scheme),
+		}
+	}
+}
+
+func FetchCapsuleGeminiCmd(request *gemini.Request, url string) tea.Cmd {
+	return func() tea.Msg {
+		capsule, _ := gemini.FetchCapsuleGemini(request)
+
+		switch capsule.Status {
+		case 1:
+			// Input required
+		case 2:
+			// Successful response
+			if len(capsule.Body) == 0 {
+				return ErrorMsg{
+					url: url,
+					err: fmt.Errorf("received empty document"),
+				}
+			}
+
+			mimetype := capsule.Information
+			if mimetype == "" {
+				mimetype = "text/gemini"
+			}
+
+			typeSubtype := strings.Split(mimetype, "/")
+			if len(typeSubtype) != 2 {
+				return ErrorMsg{
+					url: url,
+					err: fmt.Errorf("invalid mime type received: %v", mimetype),
+				}
+			}
+
+			if typeSubtype[0] == "text" && typeSubtype[1] == "gemini" {
+				return FetchGemTextGeminiMsg{
+					capsule: &capsule,
+					url:     url,
+				}
+			} else {
+				return SaveFileGeminiMsg{
+					capsule: &capsule,
+					url:     url,
+				}
+			}
+
+		case 3:
+			if len(capsule.Information) == 0 {
+				return ErrorMsg{
+					url: url,
+					err: fmt.Errorf("redirection with no target"),
+				}
+			}
+
+			if strings.Index(capsule.Information, "gemini://") == 0 {
+				base, err := purl.Parse(url)
+				if err != nil {
+					return ErrorMsg{
+						url: url,
+						err: fmt.Errorf("invalid base URL for redirection: %v", err),
+					}
+				}
+				rel, err := purl.Parse(capsule.Information)
+				if err != nil {
+					return ErrorMsg{
+						url: url,
+						err: fmt.Errorf("invalid redirection URL: %v", err),
+					}
+				}
+				newUrl := base.ResolveReference(rel).String()
+
+				return RedirectQueryGeminiMsg{
+					url: newUrl,
+				}
+			}
+
+		case 4:
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("temporary failure: %v", capsule.Information),
+			}
+		case 5:
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("permanent failure: %v", capsule.Information),
+			}
+		case 6:
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("client certificate required (not supported): %v", capsule.Information),
+			}
+		default:
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("invalid status code received: %v", capsule.Status),
+			}
+		}
+
+		return nil
+	}
+}
+
+func FetchGemTextGeminiCmd(capsule *gemini.Capsule, url string) tea.Cmd {
+	return func() tea.Msg {
+		// content := ""
+		links := []map[int]string{}
+
+		content := gemini.ParseGemText(capsule.Body, url)
+		// content = "Bougie, a tiny sparking Gopher browser"
+		links = append(links, map[int]string{1: "gemini://example.com"})
+		return ReadyMsg{
+			url:     url,
+			content: content,
+			doc:     string(capsule.Body),
+			links:   links,
+		}
+	}
+}
+
+func SaveFileGeminiCmd(capsule *gemini.Capsule, url string) tea.Cmd {
+	return func() tea.Msg {
+		purl, _ := purl.Parse(url)
+		resource := filepath.Base(purl.Path)
+
+		if resource == "" || resource == "/" || resource == "." {
+			resource = "index.gmi"
+		}
+
+		filePath := filepath.Join(config.DownloadsDir, resource)
+
+		err := os.WriteFile(filePath, capsule.Body, 0644)
+		if err != nil {
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("could not save file: %v", err),
+			}
+		}
+
+		return FileSavedMsg{
+			url:      url,
+			resource: resource,
 		}
 	}
 }

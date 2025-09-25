@@ -39,6 +39,7 @@ type Browser struct {
 	mode       mode
 	quitting   bool
 	ready      bool
+	redirects  int
 }
 
 func initBrowser() (tea.Model, tea.Cmd) {
@@ -55,6 +56,7 @@ func initBrowser() (tea.Model, tea.Cmd) {
 			Position: 0,
 			Length:   0,
 		},
+		redirects: 0,
 	}
 
 	return m, func() tea.Msg { return nil }
@@ -98,6 +100,20 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case AddHistoryMsg:
 		m.history.Add(msg.url)
+
+	case GeminiQueryMsg:
+		cmds = append(cmds, FetchCapsuleGeminiCmd(msg.request, msg.url))
+
+	case FetchGemTextGeminiMsg:
+		cmds = append(cmds, FetchGemTextGeminiCmd(msg.capsule, msg.url))
+
+	case SaveFileGeminiMsg:
+		cmds = append(cmds, SetBrowserModeCmd(save))
+		cmds = append(cmds, SaveFileGeminiCmd(msg.capsule, msg.url))
+
+	case RedirectQueryGeminiMsg:
+		cmds = append(cmds, StartQueryCmd(msg.url))
+		m.redirects++ // TODO SMELL!
 
 	case GopherDocumentQueryMsg:
 		cmds = append(cmds, FetchDocumentGopherCmd(msg.request, msg.url))
