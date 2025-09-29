@@ -54,10 +54,11 @@ type SearchMsg struct {
 type CancelSearchMsg struct{}
 
 type ReadyMsg struct {
-	url     string
-	doc     string
-	content string
-	links   []map[int]string
+	currentUrl string
+	doc        string
+	content    string
+	scheme     string
+	links      []map[int]string
 }
 
 type FileSavedMsg struct {
@@ -71,8 +72,8 @@ type ErrorMsg struct {
 }
 
 type RedrawMsg struct {
-	content  string
-	position int
+	content string
+	active  int
 }
 
 type ModeMsg mode
@@ -232,19 +233,20 @@ func FetchCapsuleGeminiCmd(request *gemini.Request, url string) tea.Cmd {
 	}
 }
 
-func FetchGemTextGeminiCmd(capsule *gemini.Capsule, url string) tea.Cmd {
+func FetchGemTextGeminiCmd(capsule *gemini.Capsule, currentUrl string) tea.Cmd {
 	return func() tea.Msg {
 		// content := ""
-		links := []map[int]string{}
+		// links := []map[int]string{}
 
-		content := gemini.ParseGemText(capsule.Body, url)
+		content, links, _ := gemini.ParseGemText(capsule.Body, currentUrl, 0)
 		// content = "Bougie, a tiny sparking Gopher browser"
 		links = append(links, map[int]string{1: "gemini://example.com"})
 		return ReadyMsg{
-			url:     url,
-			content: content,
-			doc:     string(capsule.Body),
-			links:   links,
+			currentUrl: currentUrl,
+			content:    content,
+			doc:        string(capsule.Body),
+			links:      links,
+			scheme:     "gemini",
 		}
 	}
 }
@@ -275,7 +277,7 @@ func SaveFileGeminiCmd(capsule *gemini.Capsule, url string) tea.Cmd {
 	}
 }
 
-func FetchDocumentGopherCmd(request *gopher.Request, url string) tea.Cmd {
+func FetchDocumentGopherCmd(request *gopher.Request, currentUrl string) tea.Cmd {
 	return func() tea.Msg {
 		var content string
 		var links []map[int]string
@@ -285,7 +287,7 @@ func FetchDocumentGopherCmd(request *gopher.Request, url string) tea.Cmd {
 		response, err := request.Do(ctx)
 		if err != nil {
 			return ErrorMsg{
-				url: url,
+				url: currentUrl,
 				err: fmt.Errorf("could not reach gopher server: %v", err),
 			}
 		}
@@ -301,10 +303,11 @@ func FetchDocumentGopherCmd(request *gopher.Request, url string) tea.Cmd {
 		}
 
 		return ReadyMsg{
-			url:     url,
-			content: content,
-			doc:     string(response.Body),
-			links:   links,
+			currentUrl: currentUrl,
+			content:    content,
+			doc:        string(response.Body),
+			links:      links,
+			scheme:     "gopher",
 		}
 	}
 }
@@ -353,12 +356,19 @@ func AddHistoryCmd(url string) tea.Cmd {
 	}
 }
 
-func RedrawCmd(doc string, position int) tea.Cmd {
+func RedrawCmd(scheme string, currentUrl string, doc string, active int) tea.Cmd {
 	return func() tea.Msg {
-		content, _, _ := gopher.ParseDirectory([]byte(doc), position)
+		var content string
+
+		if scheme == "gemini" {
+			content, _, _ = gemini.ParseGemText([]byte(doc), currentUrl, active)
+		} else {
+			content, _, _ = gopher.ParseDirectory([]byte(doc), active)
+		}
+
 		return RedrawMsg{
-			content:  content,
-			position: position,
+			content: content,
+			active:  active,
 		}
 	}
 }

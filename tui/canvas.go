@@ -9,13 +9,15 @@ import (
 )
 
 type Canvas struct {
-	viewport viewport.Model
-	ready    bool
-	doc      string
-	content  string
-	vpOffset int
-	links    []map[int]string
-	active   int
+	viewport   viewport.Model
+	ready      bool
+	doc        string
+	content    string
+	scheme     string
+	currentUrl string
+	vpOffset   int
+	links      []map[int]string
+	active     int
 }
 
 func NewCanvas() Canvas {
@@ -47,9 +49,11 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 
 	case ReadyMsg:
 		c.doc = msg.doc
+		c.currentUrl = msg.currentUrl
 		c.links = msg.links
 		c.active = 0
 		c.content = msg.content
+		c.scheme = msg.scheme
 
 		if len(msg.links) > 0 {
 			keys := []int{}
@@ -79,7 +83,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 
 	case RedrawMsg:
 		c.viewport.SetContent(msg.content)
-		offset := msg.position - (c.viewport.Height / 2)
+		offset := msg.active - (c.viewport.Height / 2)
 		c.viewport.SetYOffset(offset)
 
 	case tea.KeyMsg:
@@ -96,7 +100,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 					keys = append(keys, k)
 				}
 
-				cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
+				cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
 				return c, tea.Batch(cmds...)
 			}
 		}
@@ -110,7 +114,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 					keys = append(keys, k)
 				}
 
-				cmds = append(cmds, RedrawCmd(c.doc, keys[0]))
+				cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
 				return c, tea.Batch(cmds...)
 			}
 		}

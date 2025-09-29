@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Request struct {
@@ -126,54 +128,134 @@ func FetchCapsuleGemini(request *Request) (Capsule, error) {
 	return capsule, nil
 }
 
-func ParseGemText(body []byte, currentUrl string) string {
-	lines := strings.Split(string(body), "\n")
+func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int]string, error) {
+	documentStyle := lipgloss.NewStyle()
+	//	Background(lipgloss.Color("#7D56F4"))
 
-	// spacer := "      "
-	spacer := ""
+	// textStyle := lipgloss.NewStyle().
+	// 	Inherit(documentStyle).
+	// 	Width(constants.WindowWidth).
+	// 	Foreground(lipgloss.Color("#FAFAFA"))
 
+	typeStyle := lipgloss.NewStyle().
+		Inherit(documentStyle)
+
+	textStyle := lipgloss.NewStyle().
+		Inherit(typeStyle).
+		Foreground(lipgloss.Color("#AEAEAE"))
+
+	headingStyle := lipgloss.NewStyle().
+		Inherit(typeStyle).
+		Bold(true).
+		Foreground(lipgloss.Color("#FFFFFF"))
+
+	linkStyle := lipgloss.NewStyle().
+		Inherit(typeStyle).
+		Bold(true).
+		Foreground(lipgloss.Color("#7D56F4"))
+
+	activeLinkStyle := lipgloss.NewStyle().
+		Inherit(typeStyle).
+		Bold(true).
+		Foreground(lipgloss.Color("#CC56F4"))
+
+	wrapped := WrapContent(string(body), 100)
+	lines := strings.Split(wrapped, "\n")
+
+	var links []map[int]string
+
+	spacer := "      "
 	outputIndex := 0
+
 	for i, line := range lines {
 		lines[i] = strings.Trim(line, "\r\n")
 
-		var leader, tail string = "", ""
-		if len(line) > 0 && line[0] == '#' {
-			leader = "\033[1m"
-			tail = "\033[0m"
+		if len(line) > 0 {
+			if line[0] == '#' {
+				line = headingStyle.Render(line)
+			} else if len(line) > 3 && line[:2] == "=>" {
+				subLn := strings.Trim(line[2:], "\r\n\t \a")
+				split := strings.IndexAny(subLn, " \t")
+
+				if split < 0 || len(subLn)-1 <= split {
+
+				} else {
+					link := strings.Trim(subLn[:split], "\r\n\t \a")
+					text := strings.Trim(subLn[split:], "\r\n\t \a")
+
+					line = linkStyle.Render(text)
+					if i == active || active == 0 {
+						line = activeLinkStyle.Render(text)
+						active = -1
+					}
+
+					if !strings.Contains(link, "://") {
+						base, err := url.Parse(currentUrl)
+						if err != nil {
+							continue
+						}
+
+						href, err := url.Parse(link)
+						if err != nil {
+							continue
+						}
+
+						link = base.ResolveReference(href).String()
+					}
+
+					links = append(links, map[int]string{i: link})
+				}
+			} else {
+				line = textStyle.Render(line)
+			}
 		}
-		lines[outputIndex] = fmt.Sprintf("%s%s%s%s", spacer, leader, line, tail)
+
+		lines[outputIndex] = lipgloss.JoinHorizontal(lipgloss.Top, typeStyle.Render(spacer), line)
 
 		outputIndex++
 	}
 
-	foo := strings.Join(lines[:outputIndex], "\n")
-
-	return WrapContent(foo, 80)
+	return strings.Join(lines[:outputIndex], "\n"), links, nil
 }
 
 func WrapContent(raw string, width int) string {
-	width = min(width, 80)
+	width = min(width, 100)
 	counter := 0
 	var content strings.Builder
 	content.Grow(len(raw))
 
-	//spacer := "      "
-	log.Println(width)
+	spacer := ""
 
-	for _, ch := range raw {
+	for i, ch := range raw {
 		if ch == '\n' || ch == '\u0085' || ch == '\u2028' || ch == '\u2029' {
 			content.WriteRune('\n')
 			counter = 0
 		} else if ch == '\r' || ch == '\v' || ch == '\b' || ch == '\f' || ch == '\a' {
-			// Get rid of control characters we dont want
+			// Get rid of control characters we don't want
 			continue
 		} else if ch == '\t' {
 			if counter < width {
-				content.WriteString("")
+				content.WriteRune(ch)
 				// counter += 4
 			} else {
 				content.WriteRune('\n')
 				counter = 0
+			}
+		} else if ch == ' ' {
+			// Peek ahead if the next space is going to overflow the width
+			for j, next := range raw[i+1:] {
+				if next == ' ' {
+					if (counter + j) >= width {
+						content.WriteRune('\n')
+						counter = 0
+						content.WriteString(spacer)
+						counter += len(spacer)
+					} else {
+						content.WriteRune(' ')
+						counter++
+					}
+					break
+				}
 			}
 		} else {
 			if counter <= width {
@@ -182,8 +264,8 @@ func WrapContent(raw string, width int) string {
 			} else {
 				content.WriteRune('\n')
 				counter = 0
-				// content.WriteString(spacer)
-				// counter += len(spacer)
+				content.WriteString(spacer)
+				counter += len(spacer)
 				content.WriteRune(ch)
 				counter++
 			}
