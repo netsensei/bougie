@@ -41,8 +41,16 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
+	case GeminiQueryMsg:
+		m.status = loading
+		m.url = msg.url
+
 	case GopherDocumentQueryMsg:
 		m.status = loading
+		m.url = msg.url
+
+	case SaveFileGeminiMsg:
+		m.status = saving
 		m.url = msg.url
 
 	case GopherFileQueryCmd:

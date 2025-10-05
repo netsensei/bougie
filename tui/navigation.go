@@ -41,6 +41,9 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 	case ErrorMsg:
 		m.input.SetValue(msg.url)
 
+	case GeminiQueryMsg:
+		m.input.SetValue(msg.url)
+
 	case GopherFileQueryCmd:
 		m.input.SetValue(msg.url)
 
