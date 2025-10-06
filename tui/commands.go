@@ -152,7 +152,7 @@ func FetchCapsuleGeminiCmd(request *gemini.Request, url string) tea.Cmd {
 				}
 			}
 
-			mimetype := capsule.Information
+			mimetype := strings.Split(capsule.Information, ";")[0]
 			if mimetype == "" {
 				mimetype = "text/gemini"
 			}
