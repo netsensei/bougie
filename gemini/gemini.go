@@ -162,6 +162,7 @@ func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int
 	wrapped := WrapContent(string(body), 100)
 	lines := strings.Split(wrapped, "\n")
 
+	var link, text string
 	var links []map[int]string
 
 	spacer := "      "
@@ -178,33 +179,33 @@ func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int
 				split := strings.IndexAny(subLn, " \t")
 
 				if split < 0 || len(subLn)-1 <= split {
-
+					link = subLn
+					text = subLn
 				} else {
-					link := strings.Trim(subLn[:split], "\r\n\t \a")
-					text := strings.Trim(subLn[split:], "\r\n\t \a")
-
-					line = linkStyle.Render(text)
-					if i == active || active == 0 {
-						line = activeLinkStyle.Render(text)
-						active = -1
-					}
-
-					if !strings.Contains(link, "://") {
-						base, err := url.Parse(currentUrl)
-						if err != nil {
-							continue
-						}
-
-						href, err := url.Parse(link)
-						if err != nil {
-							continue
-						}
-
-						link = base.ResolveReference(href).String()
-					}
-
-					links = append(links, map[int]string{i: link})
+					link = strings.Trim(subLn[:split], "\r\n\t \a")
+					text = strings.Trim(subLn[split:], "\r\n\t \a")
 				}
+				line = linkStyle.Render(text)
+				if i == active || active == 0 {
+					line = activeLinkStyle.Render(text)
+					active = -1
+				}
+
+				if !strings.Contains(link, "://") {
+					base, err := url.Parse(currentUrl)
+					if err != nil {
+						continue
+					}
+
+					href, err := url.Parse(link)
+					if err != nil {
+						continue
+					}
+
+					link = base.ResolveReference(href).String()
+				}
+
+				links = append(links, map[int]string{i: link})
 			} else {
 				line = textStyle.Render(line)
 			}
