@@ -167,45 +167,58 @@ func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int
 
 	spacer := "      "
 	outputIndex := 0
+	preformat := false
 
 	for i, line := range lines {
 		lines[i] = strings.Trim(line, "\r\n")
 
 		if len(line) > 0 {
-			if line[0] == '#' {
-				line = headingStyle.Render(line)
-			} else if len(line) > 3 && line[:2] == "=>" {
-				subLn := strings.Trim(line[2:], "\r\n\t \a")
-				split := strings.IndexAny(subLn, " \t")
+			if len(line) >= 3 && line[:3] == "```" && !preformat {
+				preformat = true
+				continue
+			} else if len(line) >= 3 && line[:3] == "```" && preformat {
+				preformat = false
+				continue
+			}
 
-				if split < 0 || len(subLn)-1 <= split {
-					link = subLn
-					text = subLn
+			if !preformat {
+				if line[0] == '#' {
+					line = headingStyle.Render(line)
+				} else if len(line) > 3 && line[:2] == "=>" {
+					subLn := strings.Trim(line[2:], "\r\n\t \a")
+					split := strings.IndexAny(subLn, " \t")
+
+					if split < 0 || len(subLn)-1 <= split {
+						link = subLn
+						text = subLn
+					} else {
+						link = strings.Trim(subLn[:split], "\r\n\t \a")
+						text = strings.Trim(subLn[split:], "\r\n\t \a")
+					}
+					line = linkStyle.Render(text)
+					if i == active || active == 0 {
+						line = activeLinkStyle.Render(text)
+						active = -1
+					}
+
+					if !strings.Contains(link, "://") {
+						base, err := url.Parse(currentUrl)
+						if err != nil {
+							continue
+						}
+
+						href, err := url.Parse(link)
+						if err != nil {
+							continue
+						}
+
+						link = base.ResolveReference(href).String()
+					}
+
+					links = append(links, map[int]string{i: link})
 				} else {
-					link = strings.Trim(subLn[:split], "\r\n\t \a")
-					text = strings.Trim(subLn[split:], "\r\n\t \a")
+					line = textStyle.Render(line)
 				}
-				line = linkStyle.Render(text)
-				if i == active || active == 0 {
-					line = activeLinkStyle.Render(text)
-					active = -1
-				}
-
-				if !strings.Contains(link, "://") {
-					base, err := url.Parse(currentUrl)
-					if err != nil {
-						continue
-					}
-
-					href, err := url.Parse(link)
-					if err != nil {
-						continue
-					}
-
-					link = base.ResolveReference(href).String()
-				}
-
-				links = append(links, map[int]string{i: link})
 			} else {
 				line = textStyle.Render(line)
 			}
