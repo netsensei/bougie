@@ -11,6 +11,7 @@ type keymap struct {
 	Quit         key.Binding
 	Nav          key.Binding
 	View         key.Binding
+	Source       key.Binding
 	Home         key.Binding
 	Reload       key.Binding
 	Enter        key.Binding
@@ -36,6 +37,7 @@ func keysInit() {
 		"Quit":         viper.GetStringSlice("keybindings.quit"),
 		"Nav":          viper.GetStringSlice("keybindings.nav"),
 		"View":         viper.GetStringSlice("keybindings.view"),
+		"Source":       viper.GetStringSlice("keybindings.source"),
 		"Home":         viper.GetStringSlice("keybindings.home"),
 		"Reload":       viper.GetStringSlice("keybindings.reload"),
 		"Enter":        viper.GetStringSlice("keybindings.enter"),
@@ -65,6 +67,10 @@ func keysInit() {
 		View: key.NewBinding(
 			key.WithKeys(bindings["View"]...),
 			key.WithHelp(strings.Join(bindings["View"], ", "), "Toggle view mode"),
+		),
+		Source: key.NewBinding(
+			key.WithKeys(bindings["Source"]...),
+			key.WithHelp(strings.Join(bindings["Source"], ", "), "Toggle source mode"),
 		),
 		Home: key.NewBinding(
 			key.WithKeys(bindings["Home"]...),

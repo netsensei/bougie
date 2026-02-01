@@ -18,6 +18,7 @@ const (
 	search
 	input
 	save
+	source
 )
 
 type status int
@@ -125,6 +126,9 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case FileSavedMsg:
 		cmds = append(cmds, SetBrowserModeCmd(view))
 
+	case ViewSourceMsg:
+		cmds = append(cmds, SetBrowserModeCmd(source))
+
 	case ErrorMsg:
 		cmds = append(cmds, SetBrowserModeCmd(view))
 
@@ -137,6 +141,8 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.mode {
 		case nav:
 			m.navigation, cmd = m.navigation.Update(msg)
+		case source:
+			fallthrough
 		case view:
 			m.canvas, cmd = m.canvas.Update(msg)
 		case search:
@@ -222,7 +228,7 @@ func (m Browser) View() string {
 	navKey := navStyle.Render(m.navigation.View())
 	statusKey := statusStyle.Render(m.status.View())
 
-	if m.mode == view || m.mode == nav || m.mode == save {
+	if m.mode == view || m.mode == nav || m.mode == save || m.mode == source {
 		canvasKey := canvasStyle.Render(m.canvas.View())
 		return lipgloss.JoinVertical(lipgloss.Top, navKey, canvasKey, statusKey)
 	} else {

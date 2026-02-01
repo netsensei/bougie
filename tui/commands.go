@@ -61,6 +61,9 @@ type ReadyMsg struct {
 	links      []map[int]string
 }
 
+type ViewSourceMsg struct {
+}
+
 type FileSavedMsg struct {
 	url      string
 	resource string
@@ -339,6 +342,12 @@ func SaveFileGopherCmd(request *gopher.Request, url string) tea.Cmd {
 			url:      url,
 			resource: resource,
 		}
+	}
+}
+
+func ViewSourceCmd() tea.Cmd {
+	return func() tea.Msg {
+		return ViewSourceMsg{}
 	}
 }
 

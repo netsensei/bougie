@@ -51,6 +51,7 @@ func Init() error {
 	viper.SetDefault("keybindings.quit", []string{"ctrl+c", "ctrl+q"})
 	viper.SetDefault("keybindings.nav", "ctrl+n")
 	viper.SetDefault("keybindings.view", "ctrl+v")
+	viper.SetDefault("keybindings.source", "ctrl+u")
 	viper.SetDefault("keybindings.home", "ctrl+h")
 	viper.SetDefault("keybindings.reload", "ctrl+r")
 	viper.SetDefault("keybindings.enter", "enter")

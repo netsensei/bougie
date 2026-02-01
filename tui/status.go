@@ -121,6 +121,9 @@ func (m Status) View() string {
 	if m.mode == save {
 		mode = "Saving"
 	}
+	if m.mode == source {
+		mode = "Source"
+	}
 
 	barStyle := lipgloss.NewStyle().
 		Background(lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#6124DF"})

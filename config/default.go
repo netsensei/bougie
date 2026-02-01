@@ -11,6 +11,7 @@ home = "gopher://floodgap.com"
 # quit = ["ctrl+c", "ctrl+q"]
 # nav = "ctrl+n"
 # view = "ctrl+v"
+# source = "ctrl+u"
 # home = "ctrl+h"
 # reload = "ctrl+r"
 # enter = "enter"
