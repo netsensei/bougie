@@ -3,9 +3,11 @@ package tui
 import (
 	"context"
 	"fmt"
+	"net/url"
 	purl "net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -27,6 +29,10 @@ type GopherFileQueryCmd struct {
 type GeminiQueryMsg struct {
 	url     string
 	request *gemini.Request
+}
+
+type FileQueryMsg struct {
+	url string
 }
 
 type FetchGemTextGeminiMsg struct {
@@ -79,11 +85,67 @@ type RedrawMsg struct {
 	active  int
 }
 
+type InitFileMsg struct {
+	filePath string
+}
+
+type InitMsg struct {
+	url string
+}
+
 type ModeMsg mode
+
+func InitFileCmd(filePath string) tea.Cmd {
+	return func() tea.Msg {
+		return InitFileMsg{
+			filePath: filePath,
+		}
+	}
+}
+
+func InitCmd(url string) tea.Cmd {
+	return func() tea.Msg {
+		return InitMsg{
+			url: url,
+		}
+	}
+}
 
 func SetBrowserModeCmd(mode mode) tea.Cmd {
 	return func() tea.Msg {
 		return ModeMsg(mode)
+	}
+}
+
+func ParseFilePathCmd(filePath string) tea.Cmd {
+	return func() tea.Msg {
+		parsed, err := url.Parse(filePath)
+		if err == nil && parsed.Scheme != "" {
+			return InitMsg{
+				url: filePath,
+			}
+		}
+
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			return ErrorMsg{
+				url: filePath,
+				err: fmt.Errorf("could not open file: %w", err),
+			}
+		}
+
+		u := url.URL{
+			Scheme: "file",
+			Path:   absPath,
+		}
+
+		if runtime.GOOS == "windows" {
+			u.Path = "/" + filepath.ToSlash(absPath)
+		}
+
+		return InitMsg{
+			url: u.String(),
+		}
 	}
 }
 
@@ -93,7 +155,7 @@ func StartQueryCmd(url string) tea.Cmd {
 
 		switch purl.Scheme {
 		case "gopher":
-			request := gopher.New(purl.String())
+			request := gopher.NewRequest(purl.String())
 
 			switch request.ItemType {
 			case gopher.ItemTypeBinary:
@@ -129,6 +191,11 @@ func StartQueryCmd(url string) tea.Cmd {
 			return GeminiQueryMsg{
 				url:     url,
 				request: request,
+			}
+
+		case "file":
+			return FileQueryMsg{
+				url: url,
 			}
 		}
 
@@ -254,6 +321,27 @@ func FetchGemTextGeminiCmd(capsule *gemini.Capsule, currentUrl string) tea.Cmd {
 	}
 }
 
+func FetchFileContentCmd(url string) tea.Cmd {
+	return func() tea.Msg {
+		purl, _ := purl.Parse(url)
+		data, err := os.ReadFile(purl.Path)
+		if err != nil {
+			return ErrorMsg{
+				url: url,
+				err: fmt.Errorf("could not read file: %v", err),
+			}
+		}
+
+		content := string(data)
+		return ReadyMsg{
+			currentUrl: url,
+			content:    content,
+			doc:        content,
+			scheme:     "file",
+		}
+	}
+}
+
 func SaveFileGeminiCmd(capsule *gemini.Capsule, url string) tea.Cmd {
 	return func() tea.Msg {
 		purl, _ := purl.Parse(url)
@@ -369,10 +457,13 @@ func RedrawCmd(scheme string, currentUrl string, doc string, active int) tea.Cmd
 	return func() tea.Msg {
 		var content string
 
-		if scheme == "gemini" {
+		switch scheme {
+		case "gemini":
 			content, _, _ = gemini.ParseGemText([]byte(doc), currentUrl, active)
-		} else {
+		case "gopher":
 			content, _, _ = gopher.ParseDirectory([]byte(doc), active)
+		default:
+			content = doc
 		}
 
 		return RedrawMsg{

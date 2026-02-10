@@ -23,7 +23,7 @@ type Response struct {
 	ItemType string
 }
 
-func New(u string) *Request {
+func NewRequest(u string) *Request {
 	p, _ := url.Parse(u)
 
 	r := &Request{

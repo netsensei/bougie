@@ -49,6 +49,10 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 		m.status = loading
 		m.url = msg.url
 
+	case FileQueryMsg:
+		m.status = loading
+		m.url = msg.url
+
 	case SaveFileGeminiMsg:
 		m.status = saving
 		m.url = msg.url

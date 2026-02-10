@@ -37,13 +37,14 @@ type Browser struct {
 	search     Search
 	navigation Navigation
 	history    *history.History
+	filePath   string
 	mode       mode
 	quitting   bool
 	ready      bool
 	redirects  int
 }
 
-func initBrowser() (tea.Model, tea.Cmd) {
+func initBrowser(filePath string) (tea.Model, tea.Cmd) {
 	status := NewStatus()
 	navigation := NewNavigation()
 	canvas := NewCanvas()
@@ -53,6 +54,7 @@ func initBrowser() (tea.Model, tea.Cmd) {
 		status:     status,
 		navigation: navigation,
 		canvas:     canvas,
+		filePath:   filePath,
 		history: &history.History{
 			Position: 0,
 			Length:   0,
@@ -66,13 +68,16 @@ func initBrowser() (tea.Model, tea.Cmd) {
 func (m Browser) Init() tea.Cmd {
 	var cmds []tea.Cmd
 
-	home := viper.GetString("general.home")
-
+	cmds = append(cmds, SetBrowserModeCmd(view))
 	cmds = append(cmds, m.status.Init())
 
-	cmds = append(cmds, SetBrowserModeCmd(view))
-	cmds = append(cmds, AddHistoryCmd(home))
-	cmds = append(cmds, StartQueryCmd(home))
+	dest := viper.GetString("general.home")
+
+	if m.filePath != "" {
+		cmds = append(cmds, InitFileCmd(m.filePath))
+	} else {
+		cmds = append(cmds, InitCmd(dest))
+	}
 
 	return tea.Batch(cmds...)
 }
@@ -99,11 +104,21 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ModeMsg:
 		m.mode = mode(msg)
 
+	case InitMsg:
+		cmds = append(cmds, AddHistoryCmd(msg.url))
+		cmds = append(cmds, StartQueryCmd(msg.url))
+
+	case InitFileMsg:
+		cmds = append(cmds, ParseFilePathCmd(msg.filePath))
+
 	case AddHistoryMsg:
 		m.history.Add(msg.url)
 
 	case GeminiQueryMsg:
 		cmds = append(cmds, FetchCapsuleGeminiCmd(msg.request, msg.url))
+
+	case FileQueryMsg:
+		cmds = append(cmds, FetchFileContentCmd(msg.url))
 
 	case FetchGemTextGeminiMsg:
 		cmds = append(cmds, FetchGemTextGeminiCmd(msg.capsule, msg.url))

@@ -49,6 +49,9 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			c.viewport.Height = constants.WindowHeight
 		}
 
+	case ModeMsg:
+		c.mode = mode(msg)
+
 	case ReadyMsg:
 		c.doc = msg.doc
 		c.currentUrl = msg.currentUrl
@@ -94,73 +97,74 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if key.Matches(msg, config.Keymap.Nav) {
-			c.mode = nav
 			cmds = append(cmds, SetBrowserModeCmd(nav))
 		}
 
 		if key.Matches(msg, config.Keymap.View) {
-			c.mode = view
+			active := 0
+			if len(c.links) > 0 {
+				keys := []int{}
+				for k := range c.links[c.active] {
+					keys = append(keys, k)
+				}
 
-			keys := []int{}
-			for k := range c.links[c.active] {
-				keys = append(keys, k)
+				active = keys[0]
 			}
 
-			cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
+			cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, active))
 			cmds = append(cmds, SetBrowserModeCmd(view))
 		}
 
 		if key.Matches(msg, config.Keymap.Source) {
-			c.mode = source
 			cmds = append(cmds, ViewSourceCmd())
 			cmds = append(cmds, SetBrowserModeCmd(source))
 		}
 
-		if c.mode == view {
-			if key.Matches(msg, config.Keymap.ItemForward) {
-				if c.active < len(c.links)-1 {
-					c.active++
-
-					keys := []int{}
-					for k := range c.links[c.active] {
-						keys = append(keys, k)
-					}
-
-					cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
-					return c, tea.Batch(cmds...)
-				}
-			}
-
-			if key.Matches(msg, config.Keymap.ItemBackward) {
-				if c.active > 0 {
-					c.active--
-
-					keys := []int{}
-					for k := range c.links[c.active] {
-						keys = append(keys, k)
-					}
-
-					cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
-					return c, tea.Batch(cmds...)
-				}
-			}
-
-			if key.Matches(msg, config.Keymap.Enter) {
-				// @todo check if c.links isn't nil!
-				if len(c.links[c.active]) == 0 {
-					return c, nil // No links to follow
-				}
+		//if c.mode == view {
+		if key.Matches(msg, config.Keymap.ItemForward) {
+			if c.active < len(c.links)-1 {
+				c.active++
 
 				keys := []int{}
 				for k := range c.links[c.active] {
 					keys = append(keys, k)
 				}
 
-				cmds = append(cmds, AddHistoryCmd(c.links[c.active][keys[0]]))
-				cmds = append(cmds, StartQueryCmd(c.links[c.active][keys[0]]))
+				cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
 				return c, tea.Batch(cmds...)
 			}
 		}
+
+		if key.Matches(msg, config.Keymap.ItemBackward) {
+			if c.active > 0 {
+				c.active--
+
+				keys := []int{}
+				for k := range c.links[c.active] {
+					keys = append(keys, k)
+				}
+
+				cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
+				return c, tea.Batch(cmds...)
+			}
+		}
+
+		if key.Matches(msg, config.Keymap.Enter) {
+			// @todo check if c.links isn't nil!
+			if len(c.links[c.active]) == 0 {
+				return c, nil // No links to follow
+			}
+
+			keys := []int{}
+			for k := range c.links[c.active] {
+				keys = append(keys, k)
+			}
+
+			cmds = append(cmds, AddHistoryCmd(c.links[c.active][keys[0]]))
+			cmds = append(cmds, StartQueryCmd(c.links[c.active][keys[0]]))
+			return c, tea.Batch(cmds...)
+		}
+		//}
 
 		c.viewport, cmd = c.viewport.Update(msg)
 		cmds = append(cmds, cmd)
