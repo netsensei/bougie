@@ -130,12 +130,6 @@ func FetchCapsuleGemini(request *Request) (Capsule, error) {
 
 func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int]string, error) {
 	documentStyle := lipgloss.NewStyle()
-	//	Background(lipgloss.Color("#7D56F4"))
-
-	// textStyle := lipgloss.NewStyle().
-	// 	Inherit(documentStyle).
-	// 	Width(constants.WindowWidth).
-	// 	Foreground(lipgloss.Color("#FAFAFA"))
 
 	typeStyle := lipgloss.NewStyle().
 		Inherit(documentStyle)
@@ -159,18 +153,19 @@ func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int
 		Bold(true).
 		Foreground(lipgloss.Color("#CC56F4"))
 
-	wrapped := WrapContent(string(body), 100)
-	lines := strings.Split(wrapped, "\n")
+	// Parse gemtext BEFORE wrapping to preserve line structure
+	lines := strings.Split(string(body), "\n")
 
 	var link, text string
 	var links []map[int]string
+	var outputLines []string
 
 	spacer := "      "
 	outputIndex := 0
 	preformat := false
 
-	for i, line := range lines {
-		lines[i] = strings.Trim(line, "\r\n")
+	for _, line := range lines {
+		line = strings.Trim(line, "\r\n")
 
 		if len(line) > 0 {
 			if len(line) >= 3 && line[:3] == "```" && !preformat {
@@ -183,8 +178,12 @@ func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int
 
 			if !preformat {
 				if line[0] == '#' {
-					line = headingStyle.Render(line)
-				} else if len(line) > 3 && line[:2] == "=>" {
+					wrapped := WrapContent(line, 94) // 100 - 6 (spacer)
+					for _, wrappedLine := range strings.Split(wrapped, "\n") {
+						styledLine := headingStyle.Render(wrappedLine)
+						outputLines = append(outputLines, lipgloss.JoinHorizontal(lipgloss.Top, typeStyle.Render(spacer), styledLine))
+					}
+				} else if len(line) >= 2 && line[:2] == "=>" {
 					subLn := strings.Trim(line[2:], "\r\n\t \a")
 					split := strings.IndexAny(subLn, " \t")
 
@@ -194,11 +193,6 @@ func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int
 					} else {
 						link = strings.Trim(subLn[:split], "\r\n\t \a")
 						text = strings.Trim(subLn[split:], "\r\n\t \a")
-					}
-					line = linkStyle.Render(text)
-					if i == active || active == 0 {
-						line = activeLinkStyle.Render(text)
-						active = -1
 					}
 
 					if !strings.Contains(link, "://") {
@@ -215,21 +209,47 @@ func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int
 						link = base.ResolveReference(href).String()
 					}
 
-					links = append(links, map[int]string{i: link})
+					// Wrap the link text if it's too long
+					wrapped := WrapContent(text, 94) // 100 - 6 (spacer)
+					wrappedLines := strings.Split(wrapped, "\n")
+
+					for i, wrappedLine := range wrappedLines {
+						var styledLine string
+						if outputIndex == active || (active == 0 && i == 0) {
+							styledLine = activeLinkStyle.Render(wrappedLine)
+							if i == 0 {
+								active = -1
+							}
+						} else {
+							styledLine = linkStyle.Render(wrappedLine)
+						}
+						outputLines = append(outputLines, lipgloss.JoinHorizontal(lipgloss.Top, typeStyle.Render(spacer), styledLine))
+					}
+
+					// Store the link with the output index of the first line
+					links = append(links, map[int]string{outputIndex: link})
+					outputIndex += len(wrappedLines) - 1
 				} else {
-					line = textStyle.Render(line)
+					wrapped := WrapContent(line, 94) // 100 - 6 (spacer)
+					for _, wrappedLine := range strings.Split(wrapped, "\n") {
+						styledLine := textStyle.Render(wrappedLine)
+						outputLines = append(outputLines, lipgloss.JoinHorizontal(lipgloss.Top, typeStyle.Render(spacer), styledLine))
+					}
 				}
 			} else {
+				// In preformat mode, don't wrap
 				line = textStyle.Render(line)
+				outputLines = append(outputLines, lipgloss.JoinHorizontal(lipgloss.Top, typeStyle.Render(spacer), line))
 			}
+		} else {
+			// Empty line
+			outputLines = append(outputLines, lipgloss.JoinHorizontal(lipgloss.Top, typeStyle.Render(spacer), ""))
 		}
-
-		lines[outputIndex] = lipgloss.JoinHorizontal(lipgloss.Top, typeStyle.Render(spacer), line)
 
 		outputIndex++
 	}
 
-	return strings.Join(lines[:outputIndex], "\n"), links, nil
+	return strings.Join(outputLines, "\n"), links, nil
 }
 
 func WrapContent(raw string, width int) string {
