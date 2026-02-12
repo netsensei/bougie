@@ -107,57 +107,28 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 }
 
 func (m Search) View() string {
-	subtle := lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
-
-	// Dialog.
-
-	dialogBoxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#874BFD")).
-		Padding(1, 0).
-		BorderTop(true).
-		BorderLeft(true).
-		BorderRight(true).
-		BorderBottom(true)
-
-	buttonStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FFF7DB")).
-		Background(lipgloss.Color("#888B7E")).
-		Padding(0, 3).
-		MarginTop(1)
-
-	activeButtonStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FFF7DB")).
-		Background(lipgloss.Color("#F25D94")).
-		Padding(0, 3).
-		MarginTop(1).
-		Underline(true)
-
 	var okButton, cancelButton string
 	switch m.activeCmpnt {
 	case searchIn:
-		okButton = buttonStyle.MarginRight(2).Render("Search")
-		cancelButton = buttonStyle.Render("Cancel")
+		okButton = ButtonStyle.Copy().MarginRight(2).Render("Search")
+		cancelButton = ButtonStyle.Render("Cancel")
 	case cancelBtn:
-		okButton = buttonStyle.MarginRight(2).Render("Search")
-		cancelButton = activeButtonStyle.Render("Cancel")
+		okButton = ButtonStyle.Copy().MarginRight(2).Render("Search")
+		cancelButton = ActiveButtonStyle.Render("Cancel")
 	case okBtn:
-		okButton = activeButtonStyle.MarginRight(2).Render("Search")
-		cancelButton = buttonStyle.Render("Cancel")
+		okButton = ActiveButtonStyle.Copy().MarginRight(2).Render("Search")
+		cancelButton = ButtonStyle.Render("Cancel")
 	}
 
-	question := lipgloss.NewStyle().
-		Width(75).
-		Align(lipgloss.Center).
-		Render(m.searchIn.View())
+	question := QuestionStyle.Render(m.searchIn.View())
 	buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton, cancelButton)
 	ui := lipgloss.JoinVertical(lipgloss.Center, question, buttons)
 
 	dialog := lipgloss.Place(m.Width, m.Height,
 		lipgloss.Center, lipgloss.Center,
-		dialogBoxStyle.Render(ui),
+		DialogBoxStyle.Render(ui),
 		lipgloss.WithWhitespaceChars("  "),
-		lipgloss.WithWhitespaceForeground(subtle),
+		lipgloss.WithWhitespaceForeground(ColorSubtle),
 	)
 
 	return dialog

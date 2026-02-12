@@ -21,7 +21,7 @@ type Status struct {
 func NewStatus() Status {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
-	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	s.Style = lipgloss.NewStyle().Foreground(ColorSpinner)
 
 	m := Status{
 		status:  ready,
@@ -129,36 +129,19 @@ func (m Status) View() string {
 		mode = "Source"
 	}
 
-	barStyle := lipgloss.NewStyle().
-		Background(lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#6124DF"})
-
-	statusMsgStyle := lipgloss.NewStyle().
-		Inherit(barStyle)
-
 	if m.status == saving || m.status == loading {
-		statusKey := statusMsgStyle.Render(statusMsg)
+		statusKey := StatusMsgStyle.Render(statusMsg)
 		status = lipgloss.JoinHorizontal(lipgloss.Top, m.spinner.View(), statusKey)
 	}
 
 	if m.status == saved {
-		statusKey := statusMsgStyle.Render(statusMsg)
+		statusKey := StatusMsgStyle.Render(statusMsg)
 		status = lipgloss.JoinHorizontal(lipgloss.Top, statusKey)
 	}
 
-	statusStyle := lipgloss.NewStyle().
-		Inherit(barStyle).
-		Width(lipgloss.Width(status)+2).
-		Padding(0, 1)
-
-	modeStyle := lipgloss.NewStyle().
-		Inherit(barStyle).
-		Width(10).
-		Align(lipgloss.Center)
-
-	statusKey := statusStyle.Render(status)
-	modeKey := modeStyle.Render(mode)
-	midKey := lipgloss.NewStyle().
-		Inherit(barStyle).
+	statusKey := StatusKeyStyle.Copy().Width(lipgloss.Width(status) + 2).Render(status)
+	modeKey := ModeStyle.Render(mode)
+	midKey := BarStyle.Copy().
 		Width(constants.WindowWidth - lipgloss.Width(statusKey) - lipgloss.Width(modeKey)).
 		Render(" ")
 

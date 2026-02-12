@@ -222,32 +222,19 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-var (
-	InputStyle = lipgloss.NewStyle()
-)
-
 func (m Browser) View() string {
 	if m.quitting {
 		return "Bye!\n"
 	}
 
-	navStyle := lipgloss.NewStyle()
-
-	canvasStyle := lipgloss.NewStyle().
-		Padding(0, 1)
-
-	searchStyle := lipgloss.NewStyle()
-
-	statusStyle := lipgloss.NewStyle()
-
-	navKey := navStyle.Render(m.navigation.View())
-	statusKey := statusStyle.Render(m.status.View())
+	navKey := m.navigation.View()
+	statusKey := m.status.View()
 
 	if m.mode == view || m.mode == nav || m.mode == save || m.mode == source {
-		canvasKey := canvasStyle.Render(m.canvas.View())
+		canvasKey := CanvasStyle.Render(m.canvas.View())
 		return lipgloss.JoinVertical(lipgloss.Top, navKey, canvasKey, statusKey)
 	} else {
-		searchKey := searchStyle.Render(m.search.View())
+		searchKey := m.search.View()
 		return lipgloss.JoinVertical(lipgloss.Top, navKey, searchKey, statusKey)
 	}
 }

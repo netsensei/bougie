@@ -84,20 +84,8 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 }
 
 func (m Navigation) View() string {
-	logoStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("#F25D94")).
-		Foreground(lipgloss.Color("#FFF7DB")).
-		Align(lipgloss.Center).
-		Width(12)
-
-	navStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FFF7DB")).
-		Background(lipgloss.Color("#555555")).
-		Width(constants.WindowWidth-14).
-		Padding(0, 1)
-
-	logoKey := logoStyle.Render(" « Bougie » ")
-	navKey := navStyle.Render(m.input.View())
+	logoKey := LogoStyle.Render(" « Bougie » ")
+	navKey := NavBaseStyle.Copy().Width(constants.WindowWidth - 14).Render(m.input.View())
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, logoKey, navKey)
 }
