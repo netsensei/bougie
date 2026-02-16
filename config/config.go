@@ -59,6 +59,7 @@ func Init() error {
 	viper.SetDefault("keybindings.item_backward", "shift+tab")
 	viper.SetDefault("keybindings.page_forward", "f")
 	viper.SetDefault("keybindings.page_backward", "b")
+	viper.SetDefault("keybindings.component_backward", "shift+tab")
 	viper.SetDefault("keybindings.component_forward", "tab")
 	viper.SetDefault("keybindings.page_down", []string{"pgdown", "spacebar"})
 	viper.SetDefault("keybindings.page_up", "pgup")

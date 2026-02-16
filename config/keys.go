@@ -8,50 +8,52 @@ import (
 )
 
 type keymap struct {
-	Quit         key.Binding
-	Nav          key.Binding
-	View         key.Binding
-	Source       key.Binding
-	Home         key.Binding
-	Reload       key.Binding
-	Enter        key.Binding
-	ItemForward  key.Binding
-	ItemBackward key.Binding
-	CmpntForward key.Binding
-	PageForward  key.Binding
-	PageBackward key.Binding
-	HalfPageDown key.Binding
-	HalfPageUp   key.Binding
-	PageDown     key.Binding
-	PageUp       key.Binding
-	Up           key.Binding
-	Down         key.Binding
-	Left         key.Binding
-	Right        key.Binding
+	Quit          key.Binding
+	Nav           key.Binding
+	View          key.Binding
+	Source        key.Binding
+	Home          key.Binding
+	Reload        key.Binding
+	Enter         key.Binding
+	ItemForward   key.Binding
+	ItemBackward  key.Binding
+	CmpntForward  key.Binding
+	CmpntBackward key.Binding
+	PageForward   key.Binding
+	PageBackward  key.Binding
+	HalfPageDown  key.Binding
+	HalfPageUp    key.Binding
+	PageDown      key.Binding
+	PageUp        key.Binding
+	Up            key.Binding
+	Down          key.Binding
+	Left          key.Binding
+	Right         key.Binding
 }
 
 var Keymap keymap
 
 func keysInit() {
 	var bindings = map[string][]string{
-		"Quit":         viper.GetStringSlice("keybindings.quit"),
-		"Nav":          viper.GetStringSlice("keybindings.nav"),
-		"View":         viper.GetStringSlice("keybindings.view"),
-		"Source":       viper.GetStringSlice("keybindings.source"),
-		"Home":         viper.GetStringSlice("keybindings.home"),
-		"Reload":       viper.GetStringSlice("keybindings.reload"),
-		"Enter":        viper.GetStringSlice("keybindings.enter"),
-		"ItemForward":  viper.GetStringSlice("keybindings.item_forward"),
-		"ItemBackward": viper.GetStringSlice("keybindings.item_backward"),
-		"CmpntForward": viper.GetStringSlice("keybindings.component_forward"),
-		"PageForward":  viper.GetStringSlice("keybindings.page_forward"),
-		"PageBackward": viper.GetStringSlice("keybindings.page_backward"),
-		"PageDown":     viper.GetStringSlice("keybindings.page_down"),
-		"PageUp":       viper.GetStringSlice("keybindings.page_up"),
-		"Up":           viper.GetStringSlice("keybindings.up"),
-		"Down":         viper.GetStringSlice("keybindings.down"),
-		"Left":         viper.GetStringSlice("keybindings.left"),
-		"Right":        viper.GetStringSlice("keybindings.right"),
+		"Quit":          viper.GetStringSlice("keybindings.quit"),
+		"Nav":           viper.GetStringSlice("keybindings.nav"),
+		"View":          viper.GetStringSlice("keybindings.view"),
+		"Source":        viper.GetStringSlice("keybindings.source"),
+		"Home":          viper.GetStringSlice("keybindings.home"),
+		"Reload":        viper.GetStringSlice("keybindings.reload"),
+		"Enter":         viper.GetStringSlice("keybindings.enter"),
+		"ItemForward":   viper.GetStringSlice("keybindings.item_forward"),
+		"ItemBackward":  viper.GetStringSlice("keybindings.item_backward"),
+		"CmpntForward":  viper.GetStringSlice("keybindings.component_forward"),
+		"CmpntBackward": viper.GetStringSlice("keybindings.component_backward"),
+		"PageForward":   viper.GetStringSlice("keybindings.page_forward"),
+		"PageBackward":  viper.GetStringSlice("keybindings.page_backward"),
+		"PageDown":      viper.GetStringSlice("keybindings.page_down"),
+		"PageUp":        viper.GetStringSlice("keybindings.page_up"),
+		"Up":            viper.GetStringSlice("keybindings.up"),
+		"Down":          viper.GetStringSlice("keybindings.down"),
+		"Left":          viper.GetStringSlice("keybindings.left"),
+		"Right":         viper.GetStringSlice("keybindings.right"),
 	}
 
 	// Keymap reusable key mappings shared across models
@@ -103,6 +105,10 @@ func keysInit() {
 		CmpntForward: key.NewBinding(
 			key.WithKeys(bindings["CmpntForward"]...),
 			key.WithHelp(strings.Join(bindings["CmpntForward"], ", "), "Select next form element"),
+		),
+		CmpntBackward: key.NewBinding(
+			key.WithKeys(bindings["CmpntBackward"]...),
+			key.WithHelp(strings.Join(bindings["CmpntBackward"], ", "), "Select previous form element"),
 		),
 		HalfPageDown: key.NewBinding(
 			key.WithKeys(bindings["HalfPageDown"]...),

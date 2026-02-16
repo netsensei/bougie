@@ -97,6 +97,23 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 			}
 		}
 
+		if key.Matches(msg, config.Keymap.CmpntBackward) {
+			switch m.activeCmpnt {
+			case searchIn:
+				m.searchIn.Blur()
+				m.activeCmpnt = cancelBtn
+				cmds = append(cmds, SetBrowserModeCmd(search))
+			case okBtn:
+				m.searchIn.Blur()
+				m.activeCmpnt = searchIn
+				cmds = append(cmds, SetBrowserModeCmd(search))
+			case cancelBtn:
+				m.searchIn.Focus()
+				m.activeCmpnt = okBtn
+				cmds = append(cmds, SetBrowserModeCmd(input))
+			}
+		}
+
 		m.searchIn, cmd = m.searchIn.Update(msg)
 		cmds = append(cmds, cmd)
 
