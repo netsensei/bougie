@@ -85,7 +85,7 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 
 func (m Navigation) View() string {
 	logoKey := LogoStyle.Render(" « Bougie » ")
-	navKey := NavBaseStyle.Copy().Width(constants.WindowWidth - 14).Render(m.input.View())
+	navKey := NavBaseStyle.Copy().Width(constants.WindowWidth).Render(m.input.View())
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, logoKey, navKey)
 }
