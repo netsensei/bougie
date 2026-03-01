@@ -74,11 +74,11 @@ go build -o bougie
 | `Ctrl-r` | Reload current page |
 | `b` | Navigate backward |
 | `f` | Navigate forward |
-| `j` / `↓` | Next link / scroll down |
-| `k` / `↑` | Previous link / scroll up |
+| `j` / `↓` | Scroll down |
+| `k` / `↑` | Scroll up |
 | `Enter` | Follow selected link / submit input |
-| `Ctrl+d` / `Space` | Page down |
-| `Ctrl+u` | Page up |
+| `Pgdown` | Page down |
+| `Pgup` | Page up |
 | `Tab` | Navigate forward through links |
 | `Shift-Tab` | Navigate backward through links |
 | `Tab` | Cycle through dialog components |
