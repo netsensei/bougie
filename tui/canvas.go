@@ -60,19 +60,19 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		c.content = msg.content
 		c.scheme = msg.scheme
 
-		if len(msg.links) > 0 {
-			keys := []int{}
-			for k := range msg.links[0] {
-				keys = append(keys, k)
-			}
+		// if len(msg.links) > 0 {
+		// 	keys := []int{}
+		// 	for k := range msg.links[0] {
+		// 		keys = append(keys, k)
+		// 	}
 
-			offset := keys[0] - (c.viewport.Height / 2)
+		// 	offset := keys[0] - (c.viewport.Height / 2)
 
-			c.vpOffset = offset
-			c.viewport.SetYOffset(offset)
-		} else {
-			c.active = -1 // No links available
-		}
+		// 	c.vpOffset = offset
+		// 	c.viewport.SetYOffset(offset)
+		// } else {
+		// 	c.active = -1 // No links available
+		// }
 
 		c.viewport.SetContent(string(msg.content))
 		cmds = append(cmds, SetBrowserModeCmd(view))
