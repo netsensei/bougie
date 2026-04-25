@@ -3,10 +3,10 @@ package tui
 import (
 	"net/url"
 
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/netsensei/bougie/config"
 )
 
@@ -49,7 +49,7 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 		in.Prompt = "Search > "
 		in.Placeholder = "go to..."
 		in.CharLimit = 250
-		in.Width = 75
+		in.SetWidth(75)
 		in.Focus()
 
 		m.searchIn = in
@@ -59,7 +59,7 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 		cmd = SetBrowserModeCmd(input)
 		return m, cmd
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if key.Matches(msg, config.Keymap.Enter) {
 			value := m.searchIn.Value()
 
@@ -123,17 +123,17 @@ func (m Search) Update(msg tea.Msg) (Search, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Search) View() string {
+func (m Search) View() tea.View {
 	var okButton, cancelButton string
 	switch m.activeCmpnt {
 	case searchIn:
-		okButton = ButtonStyle.Copy().MarginRight(2).Render("Search")
+		okButton = ButtonStyle.MarginRight(2).Render("Search")
 		cancelButton = ButtonStyle.Render("Cancel")
 	case cancelBtn:
-		okButton = ButtonStyle.Copy().MarginRight(2).Render("Search")
+		okButton = ButtonStyle.MarginRight(2).Render("Search")
 		cancelButton = ActiveButtonStyle.Render("Cancel")
 	case okBtn:
-		okButton = ActiveButtonStyle.Copy().MarginRight(2).Render("Search")
+		okButton = ActiveButtonStyle.MarginRight(2).Render("Search")
 		cancelButton = ButtonStyle.Render("Cancel")
 	}
 
@@ -145,8 +145,8 @@ func (m Search) View() string {
 		lipgloss.Center, lipgloss.Center,
 		DialogBoxStyle.Render(ui),
 		lipgloss.WithWhitespaceChars("  "),
-		lipgloss.WithWhitespaceForeground(ColorSubtle),
+		lipgloss.WithWhitespaceStyle(lipgloss.NewStyle().Foreground(ColorSubtle)),
 	)
 
-	return dialog
+	return tea.NewView(dialog)
 }

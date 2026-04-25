@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/gemini"
 	"github.com/netsensei/bougie/gopher"

@@ -3,9 +3,9 @@ package tui
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/spinner"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/spinner"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/netsensei/bougie/tui/constants"
 )
 
@@ -84,7 +84,7 @@ func (m Status) Update(msg tea.Msg) (Status, tea.Cmd) {
 	return m, cmd
 }
 
-func (m Status) View() string {
+func (m Status) View() tea.View {
 	var status string
 	var statusMsg string
 	var mode string
@@ -147,5 +147,5 @@ func (m Status) View() string {
 
 	bar := lipgloss.JoinHorizontal(lipgloss.Top, statusKey, midKey, modeKey)
 
-	return bar
+	return tea.NewView(bar)
 }

@@ -1,9 +1,9 @@
 package tui
 
 import (
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
 	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/tui/constants"
 )
@@ -40,13 +40,13 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		if !c.ready {
-			c.viewport = viewport.New(constants.WindowWidth, constants.WindowHeight)
+			c.viewport = viewport.New(viewport.WithWidth(constants.WindowWidth), viewport.WithHeight(constants.WindowHeight))
 			c.viewport.KeyMap = CanvasKeyMap()
 			c.ready = true
 			c.mode = view
 		} else {
-			c.viewport.Width = constants.WindowWidth
-			c.viewport.Height = constants.WindowHeight
+			c.viewport.SetWidth(constants.WindowWidth)
+			c.viewport.SetHeight(constants.WindowHeight)
 		}
 
 	case ModeMsg:
@@ -92,10 +92,10 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 
 	case RedrawMsg:
 		c.viewport.SetContent(msg.content)
-		offset := msg.active - (c.viewport.Height / 2)
+		offset := msg.active - (c.viewport.Height() / 2)
 		c.viewport.SetYOffset(offset)
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if key.Matches(msg, config.Keymap.Nav) {
 			cmds = append(cmds, SetBrowserModeCmd(nav))
 		}
@@ -175,8 +175,8 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 	return c, tea.Batch(cmds...)
 }
 
-func (c Canvas) View() string {
-	return c.viewport.View()
+func (c Canvas) View() tea.View {
+	return tea.NewView(c.viewport.View())
 }
 
 func CanvasKeyMap() viewport.KeyMap {

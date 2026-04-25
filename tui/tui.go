@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/netsensei/bougie/tui/constants"
 )
 
@@ -21,7 +21,7 @@ func Start(filepath string) error {
 
 	m, _ := initBrowser(filepath)
 
-	constants.P = tea.NewProgram(m, tea.WithAltScreen())
+	constants.P = tea.NewProgram(m)
 	_, err = constants.P.Run()
 	if err != nil {
 		return fmt.Errorf("error running program: %w", err)

@@ -1,9 +1,9 @@
 package tui
 
 import (
-	"github.com/charmbracelet/bubbles/key"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/key"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/history"
 	"github.com/netsensei/bougie/tui/constants"
@@ -44,7 +44,7 @@ type Browser struct {
 	redirects  int
 }
 
-func initBrowser(filePath string) (tea.Model, tea.Cmd) {
+func initBrowser(filePath string) (Browser, tea.Cmd) {
 	status := NewStatus()
 	navigation := NewNavigation()
 	canvas := NewCanvas()
@@ -94,7 +94,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if m.ready {
-			constants.WindowHeight = msg.Height - lipgloss.Height(m.navigation.View()) - lipgloss.Height(m.status.View())
+			constants.WindowHeight = msg.Height - lipgloss.Height(m.navigation.View().Content) - lipgloss.Height(m.status.View().Content)
 			constants.WindowWidth = msg.Width
 
 			m.search.Width = constants.WindowWidth
@@ -147,7 +147,7 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ErrorMsg:
 		cmds = append(cmds, SetBrowserModeCmd(view))
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if key.Matches(msg, config.Keymap.Quit) {
 			m.quitting = true
 			return m, tea.Quit
@@ -222,19 +222,24 @@ func (m Browser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Browser) View() string {
+func (m Browser) View() tea.View {
+	var content string
 	if m.quitting {
-		return "Bye!\n"
-	}
-
-	navKey := m.navigation.View()
-	statusKey := m.status.View()
-
-	if m.mode == view || m.mode == nav || m.mode == save || m.mode == source {
-		canvasKey := CanvasStyle.Render(m.canvas.View())
-		return lipgloss.JoinVertical(lipgloss.Top, navKey, canvasKey, statusKey)
+		content = "Bye!\n"
 	} else {
-		searchKey := m.search.View()
-		return lipgloss.JoinVertical(lipgloss.Top, navKey, searchKey, statusKey)
+		navKey := m.navigation.View().Content
+		statusKey := m.status.View().Content
+
+		if m.mode == view || m.mode == nav || m.mode == save || m.mode == source {
+			canvasKey := CanvasStyle.Render(m.canvas.View().Content)
+			content = lipgloss.JoinVertical(lipgloss.Top, navKey, canvasKey, statusKey)
+		} else {
+			searchKey := m.search.View().Content
+			content = lipgloss.JoinVertical(lipgloss.Top, navKey, searchKey, statusKey)
+		}
 	}
+
+	v := tea.NewView(content)
+	v.AltScreen = true
+	return v
 }

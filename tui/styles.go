@@ -1,6 +1,6 @@
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+import "charm.land/lipgloss/v2"
 
 // Colors
 var (
@@ -8,8 +8,8 @@ var (
 	ColorSecondary  = lipgloss.Color("#874BFD")
 	ColorForeground = lipgloss.Color("#FFF7DB")
 	ColorBackground = lipgloss.Color("#555555")
-	ColorSubtle     = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
-	ColorBarBg      = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#6124DF"}
+	ColorSubtle     = lipgloss.Color("#383838")
+	ColorBarBg      = lipgloss.Color("#6124DF")
 	ColorSpinner    = lipgloss.Color("205")
 	ColorButtonBg   = lipgloss.Color("#888B7E")
 )

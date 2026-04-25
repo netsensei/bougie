@@ -1,10 +1,10 @@
 package tui
 
 import (
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/tui/constants"
 )
@@ -61,7 +61,7 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 			m.input.Focus()
 		}
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if key.Matches(msg, config.Keymap.View) {
 			cmds = append(cmds, SetBrowserModeCmd(view))
 		}
@@ -83,9 +83,9 @@ func (m Navigation) Update(msg tea.Msg) (Navigation, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Navigation) View() string {
+func (m Navigation) View() tea.View {
 	logoKey := LogoStyle.Render(" « Bougie » ")
 	navKey := NavBaseStyle.Copy().Width(constants.WindowWidth).Render(m.input.View())
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, logoKey, navKey)
+	return tea.NewView(lipgloss.JoinHorizontal(lipgloss.Top, logoKey, navKey))
 }
