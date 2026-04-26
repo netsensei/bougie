@@ -17,16 +17,11 @@ type Canvas struct {
 	scheme     string
 	currentUrl string
 	vpOffset   int
-	links      []map[int]string
-	active     int
+	links      Links
 }
 
 func NewCanvas() Canvas {
-	c := Canvas{
-		//	content: "Bougie, a tiny sparking Gopher browser",
-	}
-
-	return c
+	return Canvas{}
 }
 
 func (m Canvas) Init() tea.Cmd {
@@ -55,24 +50,9 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 	case ReadyMsg:
 		c.doc = msg.doc
 		c.currentUrl = msg.currentUrl
-		c.links = msg.links
-		c.active = 0
+		c.links = NewLinks(msg.links)
 		c.content = msg.content
 		c.scheme = msg.scheme
-
-		// if len(msg.links) > 0 {
-		// 	keys := []int{}
-		// 	for k := range msg.links[0] {
-		// 		keys = append(keys, k)
-		// 	}
-
-		// 	offset := keys[0] - (c.viewport.Height / 2)
-
-		// 	c.vpOffset = offset
-		// 	c.viewport.SetYOffset(offset)
-		// } else {
-		// 	c.active = -1 // No links available
-		// }
 
 		c.viewport.SetContent(string(msg.content))
 		cmds = append(cmds, SetBrowserModeCmd(view))
@@ -101,17 +81,7 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 		}
 
 		if key.Matches(msg, config.Keymap.View) {
-			active := 0
-			if len(c.links) > 0 {
-				keys := []int{}
-				for k := range c.links[c.active] {
-					keys = append(keys, k)
-				}
-
-				active = keys[0]
-			}
-
-			cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, active))
+			cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, c.links.ActiveLineNumber()))
 			cmds = append(cmds, SetBrowserModeCmd(view))
 		}
 
@@ -120,51 +90,29 @@ func (c Canvas) Update(msg tea.Msg) (Canvas, tea.Cmd) {
 			cmds = append(cmds, SetBrowserModeCmd(source))
 		}
 
-		//if c.mode == view {
 		if key.Matches(msg, config.Keymap.ItemForward) {
-			if c.active < len(c.links)-1 {
-				c.active++
-
-				keys := []int{}
-				for k := range c.links[c.active] {
-					keys = append(keys, k)
-				}
-
-				cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
+			if c.links.Forward() {
+				cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, c.links.ActiveLineNumber()))
 				return c, tea.Batch(cmds...)
 			}
 		}
 
 		if key.Matches(msg, config.Keymap.ItemBackward) {
-			if c.active > 0 {
-				c.active--
-
-				keys := []int{}
-				for k := range c.links[c.active] {
-					keys = append(keys, k)
-				}
-
-				cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, keys[0]))
+			if c.links.Backward() {
+				cmds = append(cmds, RedrawCmd(c.scheme, c.currentUrl, c.doc, c.links.ActiveLineNumber()))
 				return c, tea.Batch(cmds...)
 			}
 		}
 
 		if key.Matches(msg, config.Keymap.Enter) {
-			// @todo check if c.links isn't nil!
-			if len(c.links[c.active]) == 0 {
-				return c, nil // No links to follow
+			url := c.links.ActiveURL()
+			if url == "" {
+				return c, nil
 			}
-
-			keys := []int{}
-			for k := range c.links[c.active] {
-				keys = append(keys, k)
-			}
-
-			cmds = append(cmds, AddHistoryCmd(c.links[c.active][keys[0]]))
-			cmds = append(cmds, StartQueryCmd(c.links[c.active][keys[0]]))
+			cmds = append(cmds, AddHistoryCmd(url))
+			cmds = append(cmds, StartQueryCmd(url))
 			return c, tea.Batch(cmds...)
 		}
-		//}
 
 		c.viewport, cmd = c.viewport.Update(msg)
 		cmds = append(cmds, cmd)

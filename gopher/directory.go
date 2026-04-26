@@ -7,140 +7,187 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/netsensei/bougie/tui/constants"
 )
 
-func ParseDirectory(body []byte, active int) (string, []map[int]string, error) {
-	types := map[string]string{
-		"0": "[TXT]",
-		"1": "[SUB]",
-		"2": "[CCS]",
-		"3": "[ERR]",
-		"4": "[HEX]",
-		"5": "[DOS]",
-		"6": "[UUE]",
-		"7": "[SEA]",
-		"8": "[TEL]",
-		"9": "[BIN]",
-		"+": "[ALT]",
-		"g": "[GIF]",
-		"I": "[IMG]",
-		"T": "[327]",
+var types = map[string]string{
+	"0": "[TXT]",
+	"1": "[SUB]",
+	"2": "[CCS]",
+	"3": "[ERR]",
+	"4": "[HEX]",
+	"5": "[DOS]",
+	"6": "[UUE]",
+	"7": "[SEA]",
+	"8": "[TEL]",
+	"9": "[BIN]",
+	"+": "[ALT]",
+	"g": "[GIF]",
+	"I": "[IMG]",
+	"T": "[327]",
+}
+
+type Item struct {
+	ItemType   string
+	Display    string
+	Selector   string
+	Host       string
+	Port       string
+	LineNumber int
+}
+
+func (i Item) Url() string {
+	switch i.ItemType {
+	case ItemTypeNCInformation, ItemTypeError:
+		return ""
+
+	// HTML / external URL (http, gemini, ftp, etc)
+	case ItemtypeNCHTML:
+		if strings.HasPrefix(i.Selector, "URL:") {
+			return strings.TrimPrefix(i.Selector, "URL:")
+		}
+
+	case ItemTypeTelnet, ItemType3270:
+		host := i.Host
+		if i.Port != "" {
+			host += ":" + i.Port
+		}
+		return "telnet://" + host + "/"
 	}
 
-	documentStyle := lipgloss.NewStyle()
-	//	Background(lipgloss.Color("#7D56F4"))
+	selector := i.Selector
+	if selector == "" {
+		selector = "/"
+	} else if !strings.HasPrefix(selector, "/") {
+		selector = "/" + selector
+	}
 
-	textStyle := lipgloss.NewStyle().
-		Inherit(documentStyle).
-		Width(constants.WindowWidth).
-		Foreground(lipgloss.Color("#FAFAFA"))
+	host := i.Host
+	if i.Port != "" && i.Port != "70" {
+		host += ":" + i.Port
+	}
 
-	typeStyle := lipgloss.NewStyle().
-		Inherit(documentStyle).
-		Width(6)
+	u := &url.URL{
+		Scheme: "gopher",
+		Host:   host,
+		Path:   "/" + i.ItemType + selector,
+	}
 
-	linkStyle := lipgloss.NewStyle().
-		Inherit(typeStyle).
-		Bold(true).
-		Foreground(lipgloss.Color("#7D56F4"))
+	return u.String()
+}
 
-	activeLinkStyle := lipgloss.NewStyle().
-		Inherit(typeStyle).
-		Bold(true).
-		Foreground(lipgloss.Color("#CC56F4"))
+type Directory struct {
+	Items []Item
+}
 
-	// Let's go
+func Parse(body []byte) (Directory, error) {
 	reader := bytes.NewReader(body)
 	scanner := bufio.NewScanner(reader)
 
-	var links []map[int]string
-
-	doc := strings.Builder{}
+	var items []Item
 
 	lnumber := 0
 	for scanner.Scan() {
-		var line string
+		var item Item
 
-		st := scanner.Text()
+		st := strings.TrimRight(scanner.Text(), "\r")
 
 		if len(st) == 0 {
 			continue
 		}
 
-		lp := strings.Split(st[1:], "\t")
+		if st == "." {
+			break
+		}
+
+		lp := strings.SplitN(st, "\t", 5)
 		if len(lp) < 4 {
 			continue
 		}
 
-		itype := st[:1]
+		itemType := lp[0][:1]
+		display := ""
+		if len(lp[0]) > 1 {
+			display = lp[0][1:]
+		}
 
-		switch itype {
+		item = Item{
+			ItemType:   itemType,
+			Display:    display,
+			Selector:   lp[1],
+			Host:       lp[2],
+			Port:       lp[3],
+			LineNumber: lnumber,
+		}
+
+		items = append(items, item)
+		lnumber++
+	}
+
+	if err := scanner.Err(); err != nil {
+		return Directory{}, err
+	}
+
+	return Directory{Items: items}, nil
+}
+
+func (d Directory) FirstLink() int {
+	for _, item := range d.Items {
+		if item.Url() != "" {
+			return item.LineNumber
+		}
+	}
+	return -1
+}
+
+func (d Directory) Links() []map[int]string {
+	var links []map[int]string
+
+	for _, item := range d.Items {
+		url := item.Url()
+		if url != "" {
+			links = append(links, map[int]string{item.LineNumber: url})
+		}
+	}
+	return links
+}
+
+func (d Directory) Render(active int) string {
+	var sb strings.Builder
+
+	for _, item := range d.Items {
+		var line string
+
+		switch item.ItemType {
 		case ItemTypeNCInformation:
-			text := textStyle.Render(lp[0])
+			text := textStyle.Render(item.Display)
 			itemType := typeStyle.Render("")
 			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
 
-		case ItemTypeHex:
-			fallthrough
-		case ItemTypeDOS:
-			fallthrough
-		case ItemTypeUUE:
-			fallthrough
-		case ItemTypeTelnet:
-			fallthrough
-		case ItemTypeBinary:
-			fallthrough
-		case ItemTypeAlt:
-			fallthrough
-		case ItemTypeGIF:
-			fallthrough
-		case ItemTypeImage:
-			fallthrough
-		case ItemTypeText:
-			fallthrough
-		case ItemTypeSEA:
-			fallthrough
-		case ItemTypeDirectory:
-			text := textStyle.Render(lp[0])
-			itemType := linkStyle.Render(types[itype])
-			if lnumber == active || active == 0 {
-				itemType = activeLinkStyle.Render(types[itype])
-				active = -1 // reset active to -1 so we don't highlight again
+		case ItemTypeText, ItemTypeDirectory, ItemTypeHex, ItemTypeDOS,
+			ItemTypeUUE, ItemTypeTelnet, ItemTypeBinary, ItemTypeAlt,
+			ItemTypeGIF, ItemTypeImage, ItemTypeSEA:
+			text := textStyle.Render(item.Display)
+			itemType := linkStyle.Render(types[item.ItemType])
+			if item.LineNumber == active {
+				itemType = activeLinkStyle.Render(types[item.ItemType])
 			}
 
 			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
 
-			host := lp[2]
-			if lp[3] != "" {
-				host += ":" + lp[3]
-			}
-
-			url := url.URL{
-				Scheme: "gopher",
-				Host:   host,
-				Path:   itype + lp[1],
-			}
-
-			links = append(links, map[int]string{lnumber: url.String()})
-
-		case ItemType3270:
-			fallthrough
-		case ItemTypeCCSO:
-			text := textStyle.Render(lp[0])
-			itemType := linkStyle.Render(types[itype])
+		case ItemType3270, ItemTypeCCSO:
+			text := textStyle.Render(item.Display)
+			itemType := linkStyle.Render(types[item.ItemType])
 			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
 
 		default:
-			text := textStyle.Render(lp[0])
+			text := textStyle.Render(item.Display)
 			itemType := typeStyle.Render("[***]")
 			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
 		}
 
-		lnumber++
-
-		doc.WriteString(line + "\n")
+		sb.WriteString(line)
+		sb.WriteByte('\n')
 	}
 
-	return doc.String(), links, nil
+	return sb.String()
 }

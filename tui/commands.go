@@ -390,7 +390,9 @@ func FetchDocumentGopherCmd(request *gopher.Request, currentUrl string) tea.Cmd 
 		case gopher.ItemTypeSEA:
 			fallthrough
 		case gopher.ItemTypeDirectory:
-			content, links, _ = gopher.ParseDirectory(response.Body, 0)
+			directory, _ := gopher.Parse(response.Body)
+			links = directory.Links()
+			content = directory.Render(directory.FirstLink())
 		}
 
 		return ReadyMsg{
@@ -461,7 +463,8 @@ func RedrawCmd(scheme string, currentUrl string, doc string, active int) tea.Cmd
 		case "gemini":
 			content, _, _ = gemini.ParseGemText([]byte(doc), currentUrl, active)
 		case "gopher":
-			content, _, _ = gopher.ParseDirectory([]byte(doc), active)
+			directory, _ := gopher.Parse([]byte(doc))
+			content = directory.Render(active)
 		default:
 			content = doc
 		}
