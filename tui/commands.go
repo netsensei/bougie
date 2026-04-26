@@ -14,6 +14,7 @@ import (
 	"github.com/netsensei/bougie/config"
 	"github.com/netsensei/bougie/gemini"
 	"github.com/netsensei/bougie/gopher"
+	"github.com/netsensei/bougie/renderer"
 )
 
 type GopherDocumentQueryMsg struct {
@@ -392,7 +393,7 @@ func FetchDocumentGopherCmd(request *gopher.Request, currentUrl string) tea.Cmd 
 		case gopher.ItemTypeDirectory:
 			directory, _ := gopher.Parse(response.Body)
 			links = directory.Links()
-			content = directory.Render(directory.FirstLink())
+			content = renderer.RenderGopherDirectory(directory, directory.FirstLink())
 		}
 
 		return ReadyMsg{
@@ -464,7 +465,7 @@ func RedrawCmd(scheme string, currentUrl string, doc string, active int) tea.Cmd
 			content, _, _ = gemini.ParseGemText([]byte(doc), currentUrl, active)
 		case "gopher":
 			directory, _ := gopher.Parse([]byte(doc))
-			content = directory.Render(active)
+			content = renderer.RenderGopherDirectory(directory, active)
 		default:
 			content = doc
 		}

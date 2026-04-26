@@ -5,26 +5,8 @@ import (
 	"bytes"
 	"net/url"
 	"strings"
-
-	"charm.land/lipgloss/v2"
 )
 
-var types = map[string]string{
-	"0": "[TXT]",
-	"1": "[SUB]",
-	"2": "[CCS]",
-	"3": "[ERR]",
-	"4": "[HEX]",
-	"5": "[DOS]",
-	"6": "[UUE]",
-	"7": "[SEA]",
-	"8": "[TEL]",
-	"9": "[BIN]",
-	"+": "[ALT]",
-	"g": "[GIF]",
-	"I": "[IMG]",
-	"T": "[327]",
-}
 
 type Item struct {
 	ItemType   string
@@ -151,43 +133,3 @@ func (d Directory) Links() []map[int]string {
 	return links
 }
 
-func (d Directory) Render(active int) string {
-	var sb strings.Builder
-
-	for _, item := range d.Items {
-		var line string
-
-		switch item.ItemType {
-		case ItemTypeNCInformation:
-			text := textStyle.Render(item.Display)
-			itemType := typeStyle.Render("")
-			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
-
-		case ItemTypeText, ItemTypeDirectory, ItemTypeHex, ItemTypeDOS,
-			ItemTypeUUE, ItemTypeTelnet, ItemTypeBinary, ItemTypeAlt,
-			ItemTypeGIF, ItemTypeImage, ItemTypeSEA:
-			text := textStyle.Render(item.Display)
-			itemType := linkStyle.Render(types[item.ItemType])
-			if item.LineNumber == active {
-				itemType = activeLinkStyle.Render(types[item.ItemType])
-			}
-
-			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
-
-		case ItemType3270, ItemTypeCCSO:
-			text := textStyle.Render(item.Display)
-			itemType := linkStyle.Render(types[item.ItemType])
-			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
-
-		default:
-			text := textStyle.Render(item.Display)
-			itemType := typeStyle.Render("[***]")
-			line = lipgloss.JoinHorizontal(lipgloss.Top, itemType, text)
-		}
-
-		sb.WriteString(line)
-		sb.WriteByte('\n')
-	}
-
-	return sb.String()
-}

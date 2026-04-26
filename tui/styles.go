@@ -1,17 +1,20 @@
 package tui
 
-import "charm.land/lipgloss/v2"
+import (
+	"charm.land/lipgloss/v2"
+	"github.com/netsensei/bougie/theme"
+)
 
 // Colors
 var (
-	ColorPrimary    = lipgloss.Color("#F25D94")
-	ColorSecondary  = lipgloss.Color("#874BFD")
-	ColorForeground = lipgloss.Color("#FFF7DB")
-	ColorBackground = lipgloss.Color("#555555")
-	ColorSubtle     = lipgloss.Color("#383838")
-	ColorBarBg      = lipgloss.Color("#6124DF")
-	ColorSpinner    = lipgloss.Color("205")
-	ColorButtonBg   = lipgloss.Color("#888B7E")
+	ColorPrimary    = theme.Default.Primary
+	ColorSecondary  = theme.Default.Secondary
+	ColorForeground = theme.Default.Foreground
+	ColorBackground = theme.Default.Background
+	ColorSubtle     = theme.Default.Subtle
+	ColorBarBg      = theme.Default.BarBg
+	ColorSpinner    = theme.Default.Spinner
+	ColorButtonBg   = theme.Default.ButtonBg
 )
 
 // Navigation styles

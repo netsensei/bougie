@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"charm.land/lipgloss/v2"
+	"github.com/netsensei/bougie/theme"
 )
 
 type Request struct {
@@ -136,22 +137,22 @@ func ParseGemText(body []byte, currentUrl string, active int) (string, []map[int
 
 	textStyle := lipgloss.NewStyle().
 		Inherit(typeStyle).
-		Foreground(lipgloss.Color("#AEAEAE"))
+		Foreground(theme.Default.ContentMuted)
 
 	headingStyle := lipgloss.NewStyle().
 		Inherit(typeStyle).
 		Bold(true).
-		Foreground(lipgloss.Color("#FFFFFF"))
+		Foreground(theme.Default.Heading)
 
 	linkStyle := lipgloss.NewStyle().
 		Inherit(typeStyle).
 		Bold(true).
-		Foreground(lipgloss.Color("#7D56F4"))
+		Foreground(theme.Default.Link)
 
 	activeLinkStyle := lipgloss.NewStyle().
 		Inherit(typeStyle).
 		Bold(true).
-		Foreground(lipgloss.Color("#CC56F4"))
+		Foreground(theme.Default.LinkActive)
 
 	// Parse gemtext BEFORE wrapping to preserve line structure
 	lines := strings.Split(string(body), "\n")
