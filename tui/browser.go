@@ -56,7 +56,7 @@ func initBrowser(filePath string) (Browser, tea.Cmd) {
 		canvas:     canvas,
 		filePath:   filePath,
 		history: &history.History{
-			Position: 0,
+			Position: -1,
 			Length:   0,
 		},
 		redirects: 0,

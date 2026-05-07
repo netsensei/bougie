@@ -306,12 +306,10 @@ func FetchCapsuleGeminiCmd(request *gemini.Request, url string) tea.Cmd {
 
 func FetchGemTextGeminiCmd(capsule *gemini.Capsule, currentUrl string) tea.Cmd {
 	return func() tea.Msg {
-		// content := ""
-		// links := []map[int]string{}
+		gemtext, _ := gemini.Parse(capsule.Body)
+		links := gemtext.Links(currentUrl)
+		content := renderer.RenderGemText(gemtext, gemtext.FirstLink())
 
-		content, links, _ := gemini.ParseGemText(capsule.Body, currentUrl, 0)
-		// content = "Bougie, a tiny sparking Gopher browser"
-		links = append(links, map[int]string{1: "gemini://example.com"})
 		return ReadyMsg{
 			currentUrl: currentUrl,
 			content:    content,
@@ -462,7 +460,8 @@ func RedrawCmd(scheme string, currentUrl string, doc string, active int) tea.Cmd
 
 		switch scheme {
 		case "gemini":
-			content, _, _ = gemini.ParseGemText([]byte(doc), currentUrl, active)
+			gemtext, _ := gemini.Parse([]byte(doc))
+			content = renderer.RenderGemText(gemtext, active)
 		case "gopher":
 			directory, _ := gopher.Parse([]byte(doc))
 			content = renderer.RenderGopherDirectory(directory, active)

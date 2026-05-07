@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-
 type Item struct {
 	ItemType   string
 	Display    string
@@ -132,4 +131,3 @@ func (d Directory) Links() []map[int]string {
 	}
 	return links
 }
-
